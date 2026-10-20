@@ -54,6 +54,7 @@
 
     function update(dt) {
       state.t += dt;
+      if (input.keyPressed('KeyM')) HW.synth.setMuted(!HW.synth.isMuted());
       if (input.keyPressed('KeyR') && !errors.length) restart();
       if (state.error || errors.length) return;
       const world = state.world;
@@ -62,6 +63,7 @@
         state.last = input.sample(cam);
         HW.sim.step(world, state.last, dt);
         HW.fx.consume(fx, world.events, cam);
+        HW.sfx.onEvents(world.events);
         world.events.length = 0;
       }
       HW.camera.update(cam, world, state.last, dt);
@@ -81,6 +83,16 @@
       if (!state.error) console.error(err);
       state.error = err;
     }
+
+    // Audio needs a user gesture; start synth + music on the first one (music keeps running across restarts).
+    let audioStarted = false;
+    function startAudio() {
+      if (audioStarted) return;
+      audioStarted = true;
+      if (HW.synth.init()) HW.music.start(state.world ? state.world.level.music : level.music);
+    }
+    globalThis.addEventListener('pointerdown', startAudio);
+    globalThis.addEventListener('keydown', startAudio);
 
     globalThis.addEventListener('resize', resize);
     resize();
