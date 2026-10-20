@@ -322,6 +322,9 @@ test('czapka absorbs first hit, second kills', () => {
   assert.equal(w.player.shield, false);
   assert.equal(evs(w, 'shieldbreak').length, 1);
   assert.equal(w.status, 'alive');
+  HW.combat.kill(w, w.player, 'gun', e); // inside the invulnerability window: no-op
+  assert.equal(w.player.alive, true);
+  step(w, {}, 31);
   HW.combat.kill(w, w.player, 'gun', e);
   assert.equal(w.player.alive, false);
   assert.equal(w.status, 'dead');
@@ -350,14 +353,14 @@ test('czapka vs full shotgun blast: survives, then dies to a shot after 0.5 s', 
   const e = w.floors[0].enemies[0];
   HW.combat.attack(w, e, Math.PI);
   assert.equal(w.projectiles.length, 6);
-  HW.projectile.update(w, 1 / 60);
+  for (let i = 0; i < 4; i++) HW.projectile.update(w, 1 / 60);
   assert.equal(w.player.alive, true);
   assert.equal(w.player.shield, false);
   assert.equal(evs(w, 'shieldbreak').length, 1);
   step(w, {}, 31);
   e.weapon = { id: 'pistol', ammo: 8 }; e.cooldown = 0;
   HW.combat.attack(w, e, Math.PI);
-  HW.projectile.update(w, 1 / 60);
+  for (let i = 0; i < 4; i++) HW.projectile.update(w, 1 / 60);
   assert.equal(w.player.alive, false);
 });
 
