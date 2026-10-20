@@ -19,7 +19,7 @@
       x, y, vx: 0, vy: 0,
       r: 5, facing,
       home: { x, y, facing },
-      wp: 0, reactT: 0, searchT: 0, lastSeen: null, target: null,
+      wp: 0, reactT: 0, searchT: 0, arrived: false, lastSeen: null, target: null,
       path: null, repathT: 0,
       weapon: { id, ammo: HW.weapons[id].ammo },
       state: 'patrol',

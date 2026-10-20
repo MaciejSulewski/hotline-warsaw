@@ -72,12 +72,13 @@ test('does not see through wall or closed door', () => {
 
 test('reaction delay: no shot before 0.25 s, shot by 0.5 s', () => {
   const w = build(null, [def('bandzior', [6, 2])], [px(6) + 80, px(2)]);
+  w.player.invulnT = 999;
   step(w, 14);
   assert.equal(enemy(w).state, 'alert');
   assert.equal(evs(w, 'shot').length, 0);
   step(w, 16);
   assert.ok(evs(w, 'shot').length >= 1);
-  assert.equal(enemy(w).state === 'chase' || w.status === 'dead', true);
+  assert.equal(enemy(w).state, 'chase');
 });
 
 test('milicjant reacts in 0.15 s', () => {
@@ -171,8 +172,9 @@ test('downed enemy gets up after 2.5 s', () => {
   w = build(null, [def('dresiarz', [10, 2])], [px(10) + 80, px(2)]);
   e = enemy(w);
   HW.combat.knockdown(w, e, 2.5, 'fists');
+  w.player.invulnT = 999;
   step(w, 155);
-  assert.equal(e.state === 'chase' || w.status === 'dead', true);
+  assert.equal(e.state, 'chase');
 });
 
 test('patrol follows waypoints in a loop', () => {
@@ -198,4 +200,57 @@ test('stationary patrol keeps spawn facing; enemies on other floors are not upda
   o.floor = 3; o.state = 'downed'; o.downedT = 1;
   HW.ai.update(w, o, 2);
   assert.equal(o.downedT, 1);
+});
+
+test('unreachable goal does not strand the enemy', () => {
+  const rows = [
+    '####################',
+    '#P.......#.#.......#',
+    '#........###.......#',
+    '#..................#',
+    '####################',
+  ];
+  const w = build(rows, [def('dresiarz', [3, 2])]);
+  const e = enemy(w);
+  e.state = 'investigate';
+  e.target = { x: px(10), y: px(1) }; // sealed pocket
+  step(w, 5);
+  assert.equal(e.state, 'search');
+  step(w, 200);
+  assert.equal(e.state, 'patrol');
+  // chase towards an unreachable lastSeen falls back to search
+  e.state = 'chase';
+  e.lastSeen = { x: px(10), y: px(1) };
+  step(w, 1);
+  assert.equal(e.state, 'search');
+});
+
+test('melee enemy swings at range <= weapon.range + player.r', () => {
+  const reach = HW.weapons.pipe.range + 5;
+  let w = build(null, [def('dresiarz', [6, 2])], [px(6) + reach - 1, px(2)]);
+  w.player.invulnT = 999;
+  enemy(w).state = 'chase';
+  step(w, 1);
+  assert.equal(evs(w, 'swing').length, 1);
+  w = build(null, [def('dresiarz', [6, 2])], [px(6) + reach + 6, px(2)]);
+  w.player.invulnT = 999;
+  enemy(w).state = 'chase';
+  step(w, 1);
+  assert.equal(evs(w, 'swing').length, 0);
+});
+
+test('gun enemy with empty gun drops it and fights with fists', () => {
+  const w = build(null, [def('bandzior', [6, 2])], [px(6) + 60, px(2)]);
+  w.player.invulnT = 999;
+  const e = enemy(w);
+  e.weapon.ammo = 0;
+  e.state = 'chase';
+  step(w, 1);
+  assert.equal(e.weapon, null);
+  const item = w.floors[0].items.find((i) => i.id === 'pistol');
+  assert.ok(item && item.ammo === 0);
+  const x0 = e.x;
+  step(w, 30);
+  assert.ok(e.x > x0 + 10, 'closes in to melee');
+  assert.equal(evs(w, 'click').length, 0);
 });
