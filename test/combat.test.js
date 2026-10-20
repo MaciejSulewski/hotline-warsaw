@@ -302,12 +302,13 @@ test('execution needs a downed enemy within 12 px', () => {
 test('scoring hook receives player kills', () => {
   const w = withEnemies(null, [enemyAt(50, 40, 'pistol')]);
   const calls = [];
-  HW.scoring = { onKill: (...a) => calls.push(a) };
+  const realOnKill = HW.scoring.onKill;
+  HW.scoring.onKill = (...a) => calls.push(a);
   try {
     w.score = {};
     give(w.player, 'pipe');
     HW.combat.attack(w, w.player, 0);
-  } finally { delete HW.scoring; }
+  } finally { HW.scoring.onKill = realOnKill; }
   assert.equal(calls.length, 1);
   assert.equal(calls[0][2], 'melee');
   assert.equal(calls[0][3].victimHadGun, true);

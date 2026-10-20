@@ -22,7 +22,7 @@
       player: HW.player.create(T.center(start[0]), T.center(start[1]), maskId),
       projectiles: [], thrown: [], corpses: [], noises: [], events: [],
       time: 0, status: 'alive',
-      score: HW.scoring ? HW.scoring.create() : null,
+      score: HW.scoring.create(),
       mask: maskId,
       rng: HW.rng.create(seed),
     };
