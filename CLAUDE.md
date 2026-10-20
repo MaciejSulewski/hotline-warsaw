@@ -10,7 +10,7 @@ https://maciejsulewski.github.io/hotline-warsaw/ (once Pages is enabled).
 - Progress ledger (which plan tasks are done, rulings made): `docs/superpowers/progress.md`
 
 ## Commands
-- Tests: `node --test test/` (Node ≥ 20; uses only built-ins)
+- Tests: `node --test "test/**/*.test.js"` (Node ≥ 22 for glob support; uses only built-ins)
 - Run: open `index.html` in Chrome/Firefox (works from `file://`)
 
 ## Conventions

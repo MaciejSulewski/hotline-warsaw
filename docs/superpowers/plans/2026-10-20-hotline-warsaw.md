@@ -23,7 +23,7 @@
 - localStorage key: `hotline-warsaw-save-v1`.
 - Every GitHub command uses the personal token: `GH_TOKEN=$(cat ~/.gh_token_personal) <command>`. Never the ambient `GH_TOKEN`.
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`; push after each task: `GH_TOKEN=$(cat ~/.gh_token_personal) git push`.
-- Test command for the whole suite: `node --test test/` → all pass, 0 fail.
+- Test command for the whole suite: `node --test "test/**/*.test.js"` → all pass, 0 fail.
 
 **Deviation from spec file list (intentional):** corpses are plain records in `world.corpses` created by `combat.kill`, so there is no `entities/corpse.js`. Added: `world/world.js` (`HW.world.load`) and `systems/sim.js` (`HW.sim.step`), which the spec names but does not place.
 
@@ -119,9 +119,9 @@ const a = HW.rng.create(42), b = HW.rng.create(42);
 assert.deepEqual([a.next(),a.next()], [b.next(),b.next()]);
 ```
 
-- [ ] **Step 2: Run** `node --test test/` — Expected: FAIL (missing files).
+- [ ] **Step 2: Run** `node --test "test/**/*.test.js"` — Expected: FAIL (missing files).
 - [ ] **Step 3: Implement** the files. `index.html`: `<canvas id="game">`, `<link rel="stylesheet" href="css/style.css">`, script tags in the order of the File Map (each later task appends its own tags in that order). `style.css`: black body, no margin, canvas centred, `cursor: none`, `image-rendering: pixelated`.
-- [ ] **Step 4: Run** `node --test test/` — Expected: PASS.
+- [ ] **Step 4: Run** `node --test "test/**/*.test.js"` — Expected: PASS.
 - [ ] **Step 5: Commit and push** — `git add -A && git commit -m "feat: scaffold, math, rng, test harness"` then push.
 
 ---
@@ -155,7 +155,7 @@ test('segment blocks ray and reports index', () => {
 ```
 - [ ] **Step 2: Run** `node --test test/world.test.js` — Expected: FAIL.
 - [ ] **Step 3: Implement** the three files.
-- [ ] **Step 4: Run** `node --test test/` — Expected: PASS.
+- [ ] **Step 4: Run** `node --test "test/**/*.test.js"` — Expected: PASS.
 - [ ] **Step 5: Commit and push** — `feat: tilemap, collision, raycast`.
 
 ---
@@ -176,7 +176,7 @@ test('no corner cutting', () => { /* map with walls at [2,1] and [1,2]: path fro
 test('unreachable returns null', ...);
 test('start equals goal returns []', ...);
 ```
-- [ ] **Step 2: Run** — FAIL. **Step 3: Implement** (binary-heap open set, octile heuristic). **Step 4: Run** `node --test test/` — PASS.
+- [ ] **Step 2: Run** — FAIL. **Step 3: Implement** (binary-heap open set, octile heuristic). **Step 4: Run** `node --test "test/**/*.test.js"` — PASS.
 - [ ] **Step 5: Commit and push** — `feat: A* pathfinding`.
 
 ---
@@ -195,7 +195,7 @@ test('start equals goal returns []', ...);
   - `test/helpers/fixtures.js`: `makeLevel(rows, {enemies=[], items=[], floors}) -> level` (wraps a single floor with `id:'test'`, `targetScore:1000`, empty neon/stairs/phoneCall, `music:{root:'A',progression:[0,5,3,4]}`).
 
 - [ ] **Step 1: Write failing tests** — one test per check: a valid fixture returns `[]`; each of these returns exactly one error containing the stated fragment: non-rectangular map (`rectangular`), unknown char `x` (`unknown tile`), zero or two `P` (`exactly one P`), door with walls on no opposing pair (`door`), enemy in wall (`walkable`), patrol point in wall (`patrol`), unknown weapon `bazooka` (`weapon`), unknown enemy type (`type`), stair target on missing floor (`stair`), `targetScore: 0` (`targetScore`).
-- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test test/` — PASS.
+- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test "test/**/*.test.js"` — PASS.
 - [ ] **Step 5: Commit and push** — `feat: level format validator, weapon and enemy tables`.
 
 ---
@@ -234,7 +234,7 @@ test('load is deterministic and independent of previous worlds', () => {
   assert.notStrictEqual(b.floors[0].enemies[0], a.floors[0].enemies[0]);
 });
 ```
-- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test test/` — PASS.
+- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test "test/**/*.test.js"` — PASS.
 - [ ] **Step 5: Commit and push** — `feat: world load, player movement, sim step`.
 
 ---
@@ -253,7 +253,7 @@ test('load is deterministic and independent of previous worlds', () => {
   - Player and enemies push doors each step (sim calls `door.push` for every character, then `door.update`).
 
 - [ ] **Step 1: Write failing tests:** player running into a door opens it (angle changes > 0.5 rad within 0.5 s); enemy standing just behind a door is downed for 2.5 s when the player sprints through; with `lolek` it's 5 s; a door nudged slowly (player walking at 20 px/s) does not knock down; door angle never exceeds `closedAngle ± π/2`.
-- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test test/` — PASS.
+- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test "test/**/*.test.js"` — PASS.
 - [ ] **Step 5: Commit and push** — `feat: swinging doors with knockdown`.
 
 ---
@@ -296,7 +296,7 @@ test('execution of door-downed enemy carries door flag', ...);
 test('czapka absorbs first hit, second kills', ...);
 test('killed enemy drops its weapon', ...);
 ```
-- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test test/` — PASS.
+- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test "test/**/*.test.js"` — PASS.
 - [ ] **Step 5: Commit and push** — `feat: combat, projectiles, throwing, executions`.
 
 ---
@@ -327,7 +327,7 @@ test('chasing enemy pathfinds around wall to reach player', ...);
 test('downed enemy gets up after 2.5 s', ...);
 test('patrol follows waypoints in a loop', ...);
 ```
-- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test test/` — PASS.
+- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test "test/**/*.test.js"` — PASS.
 - [ ] **Step 5: Commit and push** — `feat: enemy AI state machine`.
 
 ---
@@ -348,7 +348,7 @@ test('patrol follows waypoints in a loop', ...);
   - Sim status: when every enemy on every floor is dead → `status='cleared'`, emit `cleared`; while `cleared`, player on the `P` tile of floor 0 → `status='won'`, emit `won`. Stairs: player centre entering an `S` tile with a `stairs` entry moves player to `to.floor`/`to.at`, sets `floorIndex`, clears projectiles/thrown, emits `floor`; entering the arrival tile does not bounce back until the player leaves it.
 
 - [ ] **Step 1: Write failing tests:** combo ×3 for three kills 1 s apart and bonus banked after 2.5 s idle equals `sum × 2`; fourth kill 3 s later starts a new chain; door execution scores 1100 and adds kind `door`; flexibility with melee+gun = 400; time bonus at 60 s = 1800, at 200 s = 0; grade boundaries `grade(0.85) === 'A'`, `grade(0.8499) === 'B'`, `grade(1) === 'A+'`, `grade(0.39) === 'F'`; level clears only when enemies on both floors are dead; won only after returning to `P`; stairs move player between floors and back.
-- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test test/` — PASS.
+- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test "test/**/*.test.js"` — PASS.
 - [ ] **Step 5: Commit and push** — `feat: scoring, combos, level completion, stairs`.
 
 ---
@@ -363,7 +363,7 @@ test('patrol follows waypoints in a loop', ...);
 - Produces: `HW.masks.unlocksAfter(levelId, grade, unlocked:string[]) -> string[]` (newly unlocked only), `HW.masks.levelOrder = ['blok','pewex','komenda']`, `HW.masks.nextLevel(levelId) -> id|null`. Rules from spec §6: finish blok → bolek; grade ≥ B on blok → lolek; finish pewex → czapka; grade ≥ A on any → kleks. "Finish" = any grade including F.
 
 - [ ] **Step 1: Write failing tests:** blok with C → `['bolek']`; blok with B → `['bolek','lolek']`; pewex with A → `['czapka','kleks']`; already unlocked ids are not repeated; komenda with F → `[]`.
-- [ ] **Step 2–4:** Run (FAIL) → implement → run `node --test test/` (PASS).
+- [ ] **Step 2–4:** Run (FAIL) → implement → run `node --test "test/**/*.test.js"` (PASS).
 - [ ] **Step 5: Commit and push** — `feat: mask unlock rules`.
 
 ---
@@ -377,7 +377,7 @@ test('patrol follows waypoints in a loop', ...);
 - Produces: `HW.save.KEY = 'hotline-warsaw-save-v1'`; `HW.save.defaults() -> {unlockedLevels:['blok'], unlockedMasks:['lajkonik'], bestScores:{}}`; `HW.save.load(storage) -> data`; `HW.save.store(storage, data) -> bool`; `HW.save.recordResult(data, levelId, total, grade) -> {data, newMasks, newLevel}` (pure; uses `HW.masks`). `storage` is a `localStorage`-like object or `null`; `main.js` passes a getter-wrapped `localStorage`.
 
 - [ ] **Step 1: Write failing tests:** null storage → defaults; `getItem` throws → defaults; garbage JSON → defaults; valid partial JSON missing `bestScores` → merged with defaults; arrays of wrong type → defaults for that field; `setItem` throws → `store` returns false without throwing; `recordResult` keeps the higher best score and unlocks the next level.
-- [ ] **Step 2–4:** Run (FAIL) → implement → run `node --test test/` (PASS).
+- [ ] **Step 2–4:** Run (FAIL) → implement → run `node --test "test/**/*.test.js"` (PASS).
 - [ ] **Step 5: Commit and push** — `feat: save with safe storage`.
 
 ---
@@ -407,7 +407,7 @@ test('scaleFor', () => { assert.equal(Cam.scaleFor(1920,1080), 4); assert.equal(
 test('font covers required glyphs', () => { for (const ch of 'AĄBCĆDEĘFGHIJKLŁMNŃOÓPQRSŚTUVWXYZŹŻ0123456789 .,:!?-+%×/()\'"') assert.ok(HW.font.GLYPHS[ch], ch); });
 test('every glyph is 7 rows of 5', ...);
 ```
-- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test test/` — PASS.
+- [ ] **Step 2: Run** — FAIL. **Step 3: Implement.** **Step 4: Run** `node --test "test/**/*.test.js"` — PASS.
 - [ ] **Step 5: Manual check** — no browser on the VM; ask the user to open `index.html` locally (or wait for Pages in Task 15). Checklist: moves, aims, kills, door knockdown, restart is instant.
 - [ ] **Step 6: Commit and push** — `feat: playable slice with renderer and input`.
 
@@ -426,7 +426,7 @@ test('every glyph is 7 rows of 5', ...);
   - `HW.music.start({root, progression})`, `HW.music.stop()`, `HW.music.muffle(bool)` — 110 BPM look-ahead scheduler (25 ms timer, 0.1 s horizon): saw bass arpeggio, pad chords, noise snare on 2/4, sine kick on 1/3; low-pass filter at ~600 Hz when muffled.
 
 - [ ] **Step 1: Write failing tests:** in Node (no `AudioContext`) `synth.init()` returns false and `sfx.play('shot')`, `sfx.onEvents([{type:'shot'}])`, `music.start(...)`, `music.muffle(true)`, `music.stop()` do not throw; `setMuted(true)` → `isMuted()` true.
-- [ ] **Step 2–4:** Run (FAIL) → implement → run `node --test test/` (PASS).
+- [ ] **Step 2–4:** Run (FAIL) → implement → run `node --test "test/**/*.test.js"` (PASS).
 - [ ] **Step 5: Commit and push** — `feat: procedural synthwave music and sfx`.
 
 ---
@@ -446,7 +446,7 @@ test('every glyph is 7 rows of 5', ...);
   - `main.js`: drives the flow; on `won` computes `scoring.finish`, `save.recordResult`, `save.store`, music muffle on results, ring sfx during phone call.
 
 - [ ] **Step 1: Write failing tests:** full happy path transitions; locked level select is ignored; locked mask select is ignored; `back` from playing; typewriter shows 40 chars after 1 s and `skip` completes.
-- [ ] **Step 2–4:** Run (FAIL) → implement → run `node --test test/` (PASS).
+- [ ] **Step 2–4:** Run (FAIL) → implement → run `node --test "test/**/*.test.js"` (PASS).
 - [ ] **Step 5: Commit and push** — `feat: title, level select, phone call, masks, results, HUD`.
 
 ---
@@ -461,8 +461,8 @@ test('every glyph is 7 rows of 5', ...);
 - Produces: `HW.levels.blok` per spec §7 — title `POZIOM 1: BLOK`, subtitle `Praga, 1986`, 2 floors joined by stairs, 8–10 enemies mostly `dresiarz` (at most 2 `bandzior`), ≥ 3 doors placed so door-knockdowns are natural, ≥ 1 pistol on the floor, `BAR MLECZNY` cyan neon, phone call of 3–5 Polish lines, `targetScore` 9000, music `{root:'A', progression:[0,5,3,4]}`.
 
 - [ ] **Step 1: Write failing tests** in `test/levels.test.js` (parameterized over `HW.masks.levelOrder`, skipping levels not yet defined): `validate(level)` is `[]`; enemy count within the level's range; every enemy tile reachable from `P` via `pathfind.find` (stairs counted as links between floors); every floor item reachable; `targetScore > 0`.
-- [ ] **Step 2: Run** — FAIL. **Step 3: Author the level.** **Step 4: Run** `node --test test/` — PASS.
-- [ ] **Step 5: Write README** — title, one-paragraph pitch, play link `https://maciejsulewski.github.io/hotline-warsaw/`, controls table (Global Constraints/spec §3), masks table, how to run tests (`node --test test/`), MIT licence.
+- [ ] **Step 2: Run** — FAIL. **Step 3: Author the level.** **Step 4: Run** `node --test "test/**/*.test.js"` — PASS.
+- [ ] **Step 5: Write README** — title, one-paragraph pitch, play link `https://maciejsulewski.github.io/hotline-warsaw/`, controls table (Global Constraints/spec §3), masks table, how to run tests (`node --test "test/**/*.test.js"`), MIT licence.
 - [ ] **Step 6: Commit, push, enable Pages:**
 ```bash
 git add -A && git commit -m "feat: level 1 Blok, README" && GH_TOKEN=$(cat ~/.gh_token_personal) git push
@@ -482,7 +482,7 @@ Expected: JSON with `"html_url": "https://maciejsulewski.github.io/hotline-warsa
 - Produces: `HW.levels.pewex` — title `POZIOM 2: PEWEX`, subtitle `Śródmieście, 1987`, shop floor with shelving (walls `#` used as shelves; cover from gunfire), back room, office; 1–2 floors; 10–12 enemies mostly `bandzior` with pistols/shotguns; magenta `PEWEX` neon; ≥ 1 shotgun and ≥ 1 melee weapon lying around; phone call 3–5 lines; `targetScore` 11000; music `{root:'D', progression:[0,3,5,4]}`.
 
 - [ ] **Step 1:** `node --test test/levels.test.js` already covers it once defined — author the level.
-- [ ] **Step 2: Run** `node --test test/` — PASS.
+- [ ] **Step 2: Run** `node --test "test/**/*.test.js"` — PASS.
 - [ ] **Step 3: Commit and push** — `feat: level 2 Pewex`.
 
 ---
@@ -496,6 +496,6 @@ Expected: JSON with `"html_url": "https://maciejsulewski.github.io/hotline-warsa
 - Produces: `HW.levels.komenda` — title `POZIOM 3: KOMENDA`, subtitle `Mokotów, 1988`, cells (`w` window bars between cells and corridor), interrogation room, armoury with ≥ 2 AKs on the floor; 2 floors; 13–15 enemies including ≥ 5 `milicjant` with `ak`; flickering `MO` neon (cyan and magenta); phone call 3–5 lines; `targetScore` 14000; music `{root:'E', progression:[0,5,6,4]}`.
 
 - [ ] **Step 1:** Author the level.
-- [ ] **Step 2: Run** `node --test test/` — PASS.
+- [ ] **Step 2: Run** `node --test "test/**/*.test.js"` — PASS.
 - [ ] **Step 3: Commit and push** — `feat: level 3 Komenda`.
 - [ ] **Step 4: Final manual checklist with the user on the Pages link:** all three levels beatable; unlocks progress and persist after reload; restart < 100 ms; audio + mute; no console errors; `file://` play after `git clone`.
