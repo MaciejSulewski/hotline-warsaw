@@ -1,0 +1,1 @@
+globalThis.HW = globalThis.HW || {};
