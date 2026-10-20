@@ -53,3 +53,7 @@ Task 2: complete (commits bd07f77..d4ed09f, review clean)
 Task 3: fix round 1/5 (3 addressed, 0 open — heap key mutation → suboptimal paths; OOB start; goal bounds order; commits 2eed9d1..500e2b5)
 Task 3: minor (deferred): out-of-bounds start equal to goal returns [] not null; optimality fuzz takes ~1.3 s of suite time
 Task 3: complete (commits 18e8769..500e2b5, review clean)
+- Ruling R5 (Task 4 dispatch): weapon table field conventions (radians, guns range=null, melee ammo=null, throwLethal only knife), door rule = walls left+right XOR top+bottom, enemy weapon optional (type default later), stair `at` must be `S` — plan said "spec §7 checks" without these specifics — cost if wrong: small edits to validate.js/weapon.js.
+- Ruling R6: fists cooldown 0.3 s (spec silent) — cost if wrong: tuning.
+Task 4: minor (deferred): stair test asserts only error count; horizontal (left+right walled) door never asserted valid, edge door untested; weapon table test covers subset of fields; weapon:null reported as unknown; empty-map case untested; validate(null) throws (controller confirmed suite 41/41)
+Task 4: complete (commits b562010..0006afa, review clean)
