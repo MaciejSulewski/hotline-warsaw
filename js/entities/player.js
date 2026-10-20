@@ -10,7 +10,7 @@
     return {
       x, y, r: 5, vx: 0, vy: 0, facing: 0,
       weapon: perk === 'knife' ? { id: 'knife', ammo: null } : null,
-      cooldown: 0, executing: null, alive: true,
+      cooldown: 0, invulnT: 0, executing: null, alive: true,
       shield: perk === 'shield',
       speed: perk === 'speed' ? BASE_SPEED * 1.2 : BASE_SPEED,
     };
@@ -19,6 +19,7 @@
   function update(world, input, dt) {
     const p = world.player;
     if (!p.alive) return;
+    if (p.invulnT > 0) p.invulnT = Math.max(0, p.invulnT - dt);
     const floor = world.floors[world.floorIndex];
     p.facing = M.angleTo(p.x, p.y, input.aim.x, input.aim.y);
     if (p.executing) {

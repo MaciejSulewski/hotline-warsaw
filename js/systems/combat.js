@@ -31,10 +31,13 @@
   }
 
   function kill(world, victim, cause, killer, extra) {
+    if (!victim.alive) return;
     const door = !!(extra && extra.door);
     const isPlayer = victim === world.player;
+    if (isPlayer && victim.invulnT > 0) return;
     if (isPlayer && victim.shield) {
       victim.shield = false;
+      victim.invulnT = 0.5;
       world.events.push({ type: 'shieldbreak', x: victim.x, y: victim.y });
       return;
     }
@@ -124,7 +127,7 @@
           if (ch === it.thrownBy || !ch.alive) continue;
           if (Math.hypot(ch.x - it.x, ch.y - it.y) >= ch.r + 3) continue;
           if (HW.weapons[it.id].throwLethal) kill(world, ch, 'thrown', it.thrownBy);
-          else if (ch !== world.player) knockdown(world, ch, 2.5, 'thrown');
+          else if (ch !== world.player && ch.state !== 'downed') knockdown(world, ch, 2.5, 'thrown');
           it.vx = 0; it.vy = 0;
           break;
         }

@@ -344,3 +344,39 @@ test('killed enemy drops its weapon', () => {
   assert.equal(w.corpses.length, 1);
   assert.equal(w.corpses[0].kind, 'dresiarz');
 });
+
+test('czapka vs full shotgun blast: survives, then dies to a shot after 0.5 s', () => {
+  const w = withEnemies(null, [enemyAt(60, 40, 'shotgun')], 'czapka');
+  const e = w.floors[0].enemies[0];
+  HW.combat.attack(w, e, Math.PI);
+  assert.equal(w.projectiles.length, 6);
+  HW.projectile.update(w, 1 / 60);
+  assert.equal(w.player.alive, true);
+  assert.equal(w.player.shield, false);
+  assert.equal(evs(w, 'shieldbreak').length, 1);
+  step(w, {}, 31);
+  e.weapon = { id: 'pistol', ammo: 8 }; e.cooldown = 0;
+  HW.combat.attack(w, e, Math.PI);
+  HW.projectile.update(w, 1 / 60);
+  assert.equal(w.player.alive, false);
+});
+
+test('thrown non-lethal item does not re-knock a downed enemy', () => {
+  const w = withEnemies(null, [enemyAt(80, 40)]);
+  const e = w.floors[0].enemies[0];
+  HW.combat.knockdown(w, e, 1.5, 'door');
+  give(w.player, 'bat');
+  HW.combat.throwWeapon(w, w.player, 0);
+  for (let i = 0; i < 60; i++) HW.combat.updateThrown(w, 1 / 60);
+  assert.equal(e.downedBy, 'door');
+  assert.equal(e.downedT, 1.5);
+});
+
+test('kill on an already dead victim is a no-op', () => {
+  const w = withEnemies(null, [enemyAt(80, 40)]);
+  const e = w.floors[0].enemies[0];
+  HW.combat.kill(w, e, 'gun', w.player);
+  HW.combat.kill(w, e, 'gun', w.player);
+  assert.equal(evs(w, 'kill').length, 1);
+  assert.equal(w.corpses.length, 1);
+});
