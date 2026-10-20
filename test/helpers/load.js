@@ -27,8 +27,10 @@ function allJsFiles(dir) {
   return out.sort();
 }
 
-function loadHW() {
+// extraGlobals: optional host objects (e.g. DOM stubs) copied into the vm context before scripts run.
+function loadHW(extraGlobals) {
   const context = { console };
+  if (extraGlobals) Object.defineProperties(context, Object.getOwnPropertyDescriptors(extraGlobals)); // keeps getters live
   context.globalThis = context;
   vm.createContext(context);
   for (const src of scriptList()) {
