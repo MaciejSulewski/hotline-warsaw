@@ -90,3 +90,5 @@ Task 11: complete (commits 4a7105a..f1057ad, batched review clean)
 - Note: headless Chromium via Playwright is available on the VM (found by Task 12) — use it for visual smoke checks in later tasks.
 Task 12: minor (deferred): stale input latches after error screen fire on first step after R; cam.shake survives restart; floor items all drawn spin 0 (no per-item rotation), thrown spin phase arbitrary; no tests for R clearing decals / hit-stop skip / latch across zero-step frames; blur doesn't clear pressed latches; boot() not try/catch-wrapped; module-level lastT in renderer; projectiles/thrown drawn without floor filter
 Task 12: complete (commits 816d717..024aee3, review clean; headless-Chromium screenshots taken, manual playtest pending user)
+Task 13: minor (deferred): audio init one-shot — no resume() retry on later gestures if context stays suspended (carried into Task 14); music.stop leaves scheduled pads ringing and old bus/filter connected; tick() not try/catch; no per-frame SFX cap; M key binding, music-start, mute-before-init untested; abrupt gain changes may click
+Task 13: complete (commits 538115d..9c54040, review clean)
