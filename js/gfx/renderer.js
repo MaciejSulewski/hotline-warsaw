@@ -16,12 +16,19 @@
     const map = floor.map, T = HW.tilemap, tiles = sprites.tiles;
     const variants = tiles.floor[world.level.id] || tiles.floor.blok;
     const solid = (x, y) => T.isSolid(T.get(map, x, y));
+    // Optional outdoor surfaces: [{ tile: 'asphalt' | 'pavement', rect: [x0, y0, x1, y1] }] (inclusive).
+    const rects = (world.level.floors[fi] || {}).ground || [];
+    const outdoor = (x, y) => {
+      const r = rects.find((g) => x >= g.rect[0] && y >= g.rect[1] && x <= g.rect[2] && y <= g.rect[3]);
+      return r && tiles[r.tile];
+    };
     const cars = [];
     const ground = HW.sprites.canvas(map.w * TILE, map.h * TILE, (px, g) => {
       for (let ty = 0; ty < map.h; ty++) {
         for (let tx = 0; tx < map.w; tx++) {
           const ch = T.get(map, tx, ty);
-          const img = ch === '~' ? tiles.carpet : ch === 'S' ? tiles.stairs : variants[(tx * 7 + ty * 3) % 5 === 0 ? 1 : 0];
+          const img = ch === '~' ? tiles.carpet : ch === 'S' ? tiles.stairs
+            : outdoor(tx, ty) || variants[(tx * 7 + ty * 3) % 5 === 0 ? 1 : 0];
           g.drawImage(img, tx * TILE, ty * TILE);
           if (ch === 'P') cars.push([tx, ty]);
         }

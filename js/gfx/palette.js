@@ -5,6 +5,7 @@
   HW.palette = {
     black: '#0b0a10', white: '#f4efe6', ink: '#16141c',
     concrete: '#76767c', concreteLight: '#9a9aa0', concreteDark: '#4b4b53', wallEdge: '#2a2a31',
+    asphalt: '#34343c', asphaltLight: '#4a4a52',
     linoleum: '#c2a878', linoleumBrown: '#8c6a46', mustard: '#c9a227', carpet: '#7a2a34', carpetLight: '#a8484c',
     glass: '#24485a', glassLight: '#5fa3b8', frame: '#8a8a90',
     door: '#7a4a22', doorLight: '#a8683a',

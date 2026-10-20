@@ -133,6 +133,23 @@ test('every glyph is 7 rows of 5', () => {
     for (const row of g) assert.match(row, /^[.#]{5}$/, ch);
   }
 });
+test('accented capitals are full height, not squeezed like lowercase', () => {
+  const lit = (row) => row.includes('#');
+  // acute / dot sits in row 0; the letter body fills rows 1–6 with no blank gap row
+  for (const ch of 'ĆŃÓŚŹŻ') {
+    const g = HW.font.GLYPHS[ch];
+    assert.ok(lit(g[0]), ch + ' diacritic');
+    for (let r = 1; r < 7; r++) assert.ok(lit(g[r]), ch + ' row ' + r + ' blank');
+  }
+  // ogonek hangs in row 6; the letter's left stroke runs down to row 5
+  for (const ch of 'ĄĘ') {
+    const g = HW.font.GLYPHS[ch];
+    for (let r = 1; r < 6; r++) assert.equal(g[r][0], '#', ch + ' row ' + r + ' stem');
+    assert.ok(lit(g[6]), ch + ' ogonek');
+  }
+  const L = HW.font.GLYPHS['Ł'];
+  assert.ok(L.every(lit), 'Ł spans all 7 rows');
+});
 test('font measure', () => {
   assert.equal(HW.font.measure('', 1), 0);
   assert.equal(HW.font.measure('A', 1), 5);
@@ -242,7 +259,7 @@ test('sprites build every character, mask, weapon, corpse and tile', () => {
   }
   for (const m of MASK_IDS) assert.ok(s.masks[m], m);
   for (const w of Object.keys(H.weapons)) assert.ok(s.weapons[w], w);
-  for (const k of ['carpet', 'wall', 'window', 'stairs', 'car']) assert.ok(s.tiles[k], k);
+  for (const k of ['carpet', 'wall', 'window', 'stairs', 'car', 'asphalt', 'pavement']) assert.ok(s.tiles[k], k);
   for (const l of ['blok', 'pewex', 'komenda']) assert.equal(s.tiles.floor[l].length, 2, l);
   for (const l of ['blok', 'pewex', 'komenda']) assert.ok(H.palette.floor[l], l);
 });

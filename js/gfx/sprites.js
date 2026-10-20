@@ -177,6 +177,18 @@
         px(P.frame, 0, 0, 16, 16); px(P.glass, 1, 3, 14, 10);
         px(P.glassLight, 2, 4, 5, 1); px(P.glassLight, 2, 5, 2, 1); px(P.frame, 7, 3, 2, 10);
       }),
+      // street: dark asphalt with grit, and a pavement of square concrete slabs
+      asphalt: canvas(16, 16, (px) => {
+        px(P.asphalt, 0, 0, 16, 16);
+        for (let i = 0; i < 10; i++) {
+          px(hash(i, 4, 9) > 0.5 ? P.asphaltLight : P.ink, Math.floor(hash(i, 5, 9) * 16), Math.floor(hash(i, 6, 9) * 16));
+        }
+      }),
+      pavement: canvas(16, 16, (px) => {
+        px(P.concreteLight, 0, 0, 16, 16);
+        px(P.concrete, 0, 15, 16, 1); px(P.concrete, 15, 0, 1, 16);
+        for (let i = 0; i < 5; i++) px(P.concrete, Math.floor(hash(i, 7, 9) * 15), Math.floor(hash(i, 8, 9) * 15));
+      }),
       stairs: canvas(16, 16, (px) => {
         for (let i = 0; i < 4; i++) { px(P.concreteLight, 0, i * 4, 16, 3); px(P.concreteDark, 0, i * 4 + 3, 16, 1); }
       }),
