@@ -70,3 +70,11 @@ Task 6: complete (commits 790524e..215a8fd, review clean; implementer deviations
 Task 7: fix round 1/5 (3 addressed, 0 open — shield vs shotgun multi-hit; thrown re-knock of downed enemy; kill alive guard; commits 03e137d..97c0fe2)
 Task 7: minor (deferred): player.js computes facing twice; most projectile/thrown tests bypass sim.step (no end-to-end shot via sim); no test that enemy cooldown ticks in sim; 554a598 committed with 2 failing tests (fixed in 97c0fe2)
 Task 7: complete (commits df7684a..97c0fe2, review clean; controller confirmed suite green)
+- Ruling R13 (Task 8 dispatch): AI details — sim order player → AI → doors → projectiles → thrown; downedT countdown in AI; alert = stand + face player until reactT; attacks only in chase; straight-line chase when visible, A* otherwise; return-to-home state after search; investigate → search at the noise spot; empty-gun enemies just click — cost if wrong: AI tuning.
+- Ruling R14: an enemy whose gun is empty drops it (ammo 0) and fights with fists — spec silent; endless clicking at 90 px is a dead end for gameplay — cost if wrong: small AI tweak.
+- Ruling R15: unarmed (fists) enemies cannot hurt the player — consistent with fists being non-lethal and no player stun; disarmed enemies become a harmless chaser, which is fine for gameplay — cost if wrong: one rule in combat.attack.
+Task 8: fix round 1/5 (6 addressed, 0 open — unreachable goal stuck; stale path; arrived init; door segs once; ambiguous tests + melee range test; empty gun → fists; commits e418593..30998a0)
+- Ruling R16: visible-but-unreachable player (e.g. behind window bars in level 3) keeps the enemy in chase, holding position and attacking — re-review flagged an alert/chase/search flicker; level 3 depends on it — cost if wrong: small AI tweak.
+Task 8: fix round 2/5 (1 addressed, 0 open — visible-but-unreachable chase loop; wideClear now treats solid tiles incl. windows as blocking; commits 30998a0..966f0fa)
+Task 8: minor (deferred): re-sighting in search/return/investigate pays full reaction delay; no tests for gun standoff at 90 px, aim spread, hearing ignored while seeing; return-to-patrol test doesn't exercise stationary return; sealed-pocket test's chase half is trivial
+Task 8: complete (commits c816bd3..966f0fa, review clean; controller confirmed suite green)
