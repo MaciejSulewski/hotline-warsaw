@@ -371,7 +371,9 @@ test('main drives the full flow through results and back to level select', () =>
   assert.ok(saved.unlockedMasks.includes('bolek'));
   assert.ok(saved.bestScores.blok);
   assert.ok(st.flow.save.unlockedMasks.includes('bolek'), 'flow sees the new save');
-  for (let i = 0; i < 30; i++) env.tick();
+  click(env, 240, 135); env.tick();
+  assert.equal(st.flow.state, 'results', 'early click ignored');
+  for (let i = 0; i < 40; i++) env.tick();
   click(env, 240, 135); env.tick();
   assert.equal(st.flow.state, 'levelSelect');
   assert.equal(st.world, null);
@@ -441,4 +443,33 @@ test('main shows an error overlay instead of crashing and R recovers', () => {
   env.tick();
   assert.equal(H.main.state.error, null);
   assert.ok(H.main.state.world.time < 0.1);
+});
+
+test('main applies at most one state-changing menu action per frame', () => {
+  const env = makeEnv();
+  const H = loadHW(env);
+  const st = H.main.state;
+  env.tick();
+  click(env, 240, 135); env.tick();
+  press(env, 'Enter'); env.tick();
+  press(env, 'Enter'); env.tick();
+  assert.equal(st.flow.state, 'phoneCall');
+  assert.equal(st.flow.phone.done, true);
+  click(env, 240, 135); press(env, 'Enter'); // both in one frame
+  env.tick();
+  assert.equal(st.flow.state, 'maskSelect');
+});
+test('main: Esc on the error screen returns to level select', () => {
+  const env = makeEnv();
+  const H = loadHW(env);
+  driveToPlaying(env, H);
+  H.sim.step = () => { throw new Error('boom'); };
+  const err = console.error;
+  console.error = () => {};
+  try { env.tick(); } finally { console.error = err; }
+  assert.ok(H.main.state.error);
+  press(env, 'Escape'); env.tick();
+  assert.equal(H.main.state.error, null);
+  assert.equal(H.main.state.flow.state, 'levelSelect');
+  assert.equal(H.main.state.world, null);
 });

@@ -4,8 +4,10 @@
   // Pure screen state machine (no drawing, no DOM). main.js dispatches actions and reacts to
   // state changes (loads the world on 'playing', computes results on a won world).
   //   title → levelSelect → phoneCall → maskSelect → playing → results → levelSelect
+  // Actions: click, select {id}, confirm, back, won {results, save?}, move {dir}, hover {id}, abort.
   const MASK_IDS = ['lajkonik', 'bolek', 'lolek', 'czapka', 'kleks'];
   const RING = 1.5, RING_EVERY = 0.5; // phone rings before the typewriter starts
+  const RESULTS_LOCK = 0.5; // results ignore dismissal this long (no accidental skip)
 
   function create(save) {
     return {
@@ -86,6 +88,8 @@
 
   function handle(flow, action) {
     const s = flow.state, type = action.type;
+    // abort: unconditional escape hatch to level select (used by the error screen).
+    if (type === 'abort') { if (s !== 'title' && s !== 'levelSelect') toLevelSelect(flow); return flow; }
     if (s === 'title') {
       if (type === 'click' || type === 'confirm') go(flow, 'levelSelect');
     } else if (s === 'levelSelect' || s === 'maskSelect') {
@@ -108,6 +112,7 @@
         go(flow, 'results');
       }
     } else if (s === 'results') {
+      if (flow.stateT < RESULTS_LOCK) return flow;
       if (type === 'click' || type === 'confirm' || type === 'back') toLevelSelect(flow);
     }
     return flow;

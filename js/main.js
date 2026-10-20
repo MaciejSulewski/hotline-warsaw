@@ -121,11 +121,18 @@
         const a = HW.screens.hitTest(flow, m.x, m.y);
         if (a && a.type === 'select') dispatch({ type: 'hover', id: a.id });
       }
-      if (k.click) { const a = HW.screens.hitTest(flow, m.x, m.y); if (a) dispatch(a); }
-      if (k.up) dispatch({ type: 'move', dir: -1 });
-      if (k.down) dispatch({ type: 'move', dir: 1 });
-      if (k.confirm) dispatch({ type: 'confirm' });
-      if (k.back) dispatch({ type: 'back' });
+      // At most one state change per frame: stop at the first action that changes the screen.
+      const actions = [];
+      if (k.click) { const a = HW.screens.hitTest(flow, m.x, m.y); if (a) actions.push(a); }
+      if (k.up) actions.push({ type: 'move', dir: -1 });
+      if (k.down) actions.push({ type: 'move', dir: 1 });
+      if (k.confirm) actions.push({ type: 'confirm' });
+      if (k.back) actions.push({ type: 'back' });
+      for (const a of actions) {
+        const before = flow.state;
+        dispatch(a);
+        if (flow.state !== before) break;
+      }
     }
 
     function updatePlaying(k, dt) {
@@ -154,6 +161,9 @@
         if (k.restart) {
           state.error = null;
           if (flow.state === 'playing') restart();
+        } else if (k.back) {
+          state.error = null;
+          dispatch({ type: 'abort' });
         }
         return;
       }
@@ -171,7 +181,7 @@
       }
       if (flow.state === 'playing' && flow.world) {
         HW.renderer.draw(ctx, flow.world, cam, fx, sprites, state.t);
-        HW.hud.draw(ctx, flow.world);
+        HW.hud.draw(ctx, flow.world, cam);
       } else {
         HW.screens.draw(ctx, flow, state.t, { sprites, cursor: input.mouse });
       }

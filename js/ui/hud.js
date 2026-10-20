@@ -2,7 +2,7 @@
   'use strict';
 
   // In-game HUD drawn in screen space over the renderer's frame.
-  const W = 480, H = 270, WINDOW = 2.5; // combo window (scoring.js)
+  const W = 480, H = 270, ARROW_R = 22; // arrow orbit radius around the player, screen px
   const carCache = new WeakMap();
 
   const P = () => HW.palette;
@@ -16,7 +16,7 @@
   // Fraction (1 → 0) of the combo window left since the last kill; 0 with no chain.
   function comboLeft(score, time) {
     if (!score || !score.chain || !score.chain.length) return 0;
-    return Math.max(0, 1 - (time - score.lastKillT) / WINDOW);
+    return Math.max(0, 1 - (time - score.lastKillT) / HW.scoring.WINDOW);
   }
 
   function carOf(world) {
@@ -58,14 +58,35 @@
     }
   }
 
-  function drawArrow(ctx, x, y, angle) {
+  // Where the player should head once cleared: the car on floor 0, otherwise the stairs on this
+  // floor that lead toward floor 0 (a link straight to 0, else to a lower floor, else any).
+  function target(world) {
+    const fi = world.floorIndex, T = HW.tilemap;
+    if (fi === 0) return carOf(world);
+    const links = (world.level.floors[fi] && world.level.floors[fi].stairs) || [];
+    const link = links.find((l) => l.to.floor === 0) || links.find((l) => l.to.floor < fi) || links[0];
+    return link ? { x: T.center(link.at[0]), y: T.center(link.at[1]) } : null;
+  }
+
+  // Arrow orbiting the player's on-screen position, pointing at the target.
+  function arrow(world, cam) {
+    const tg = target(world);
+    if (!tg) return null;
+    const p = world.player;
+    const px = cam ? Math.round(W / 2 - cam.x + (cam.ox || 0)) + p.x : W / 2;
+    const py = cam ? Math.round(H / 2 - cam.y + (cam.oy || 0)) + p.y : H / 2;
+    const angle = Math.atan2(tg.y - p.y, tg.x - p.x);
+    return { x: px + Math.cos(angle) * ARROW_R, y: py + Math.sin(angle) * ARROW_R, angle };
+  }
+
+  function drawArrow(ctx, a, color) {
     ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle);
+    ctx.translate(Math.round(a.x), Math.round(a.y));
+    ctx.rotate(a.angle);
     ctx.fillStyle = P().ink;
-    ctx.beginPath(); ctx.moveTo(10, 1); ctx.lineTo(-5, -6); ctx.lineTo(-2, 1); ctx.lineTo(-5, 8); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = P().cyan;
-    ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-6, -7); ctx.lineTo(-3, 0); ctx.lineTo(-6, 7); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-7, -8); ctx.lineTo(-3, 0); ctx.lineTo(-7, 8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.moveTo(7, 0); ctx.lineTo(-5, -6); ctx.lineTo(-2, 0); ctx.lineTo(-5, 6); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
 
@@ -79,17 +100,25 @@
     lines.forEach(([s, color, k], i) => HW.font.draw(ctx, s, W / 2, (H - h) / 2 + 8 + i * 18, color, k, 'center'));
   }
 
-  function draw(ctx, world) {
+  // cam is optional: without it the arrow orbits the screen centre.
+  function draw(ctx, world, cam) {
     drawWeapon(ctx, world.player);
     drawScore(ctx, world);
     if (world.status === 'cleared') {
-      if (world.time % 0.8 < 0.6) shadowed(ctx, 'WRACAJ DO AUTA', W / 2, 10, P().cyan, 2, 'center');
-      const car = world.floorIndex === 0 ? carOf(world) : null;
-      if (car) drawArrow(ctx, W / 2, 40, Math.atan2(car.y - world.player.y, car.x - world.player.x));
+      const color = Math.floor(world.time * 3) % 2 ? P().cyan : P().magenta; // pulse, never off
+      const msg = 'WRACAJ DO AUTA', tw = HW.font.measure(msg, 2);
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = P().black;
+      ctx.fillRect(W / 2 - tw / 2 - 8, 6, tw + 16, 22);
+      ctx.restore();
+      shadowed(ctx, msg, W / 2, 10, color, 2, 'center');
+      const a = arrow(world, cam);
+      if (a) drawArrow(ctx, a, color);
     } else if (world.status === 'dead') {
       banner(ctx, [['NIE ŻYJESZ — R', P().magenta, 2], ['ESC — MENU', P().concreteLight, 1]]);
     }
   }
 
-  HW.hud = { draw, comboLeft };
+  HW.hud = { ARROW_R, draw, comboLeft, target, arrow };
 })(globalThis.HW);

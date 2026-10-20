@@ -58,5 +58,5 @@
     return { lines, total, grade: grade(total / targetScore) };
   }
 
-  HW.scoring = { create, onKill, tick, finish, grade };
+  HW.scoring = { WINDOW, create, onKill, tick, finish, grade };
 })(globalThis.HW);

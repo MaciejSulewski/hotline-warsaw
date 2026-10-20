@@ -61,6 +61,7 @@ test('full happy path: title → levelSelect → phoneCall → maskSelect → pl
   F.handle(f, { type: 'won', results });
   assert.equal(f.state, 'results');
   assert.equal(f.results, results);
+  F.update(f, 0.5);
   F.handle(f, { type: 'click' });
   assert.equal(f.state, 'levelSelect');
   assert.equal(f.world, null);
@@ -123,6 +124,7 @@ test('won carries the new save: unlocked mask becomes selectable next time', () 
   F.handle(f, { type: 'confirm' }); F.handle(f, { type: 'confirm' }); F.handle(f, { type: 'select', id: 'lajkonik' });
   const rec = HW.save.recordResult(f.save, 'blok', 9000, 'A+');
   F.handle(f, { type: 'won', results: { lines: [], total: 9000, grade: 'A+', newMasks: rec.newMasks, newLevel: rec.newLevel }, save: rec.data });
+  F.update(f, 0.5);
   F.handle(f, { type: 'confirm' });
   assert.equal(f.state, 'levelSelect');
   F.handle(f, { type: 'select', id: 'blok' }); F.handle(f, { type: 'confirm' }); F.handle(f, { type: 'confirm' });
@@ -151,6 +153,25 @@ test('back: playing, maskSelect, phoneCall and results return to levelSelect', (
   assert.equal(f.world, null);
   assert.equal(f.maskId, null);
   F.handle(f, { type: 'won', results: {} }); // won outside playing is ignored
+  assert.equal(f.state, 'levelSelect');
+});
+test('results ignore dismissal for 0.5 s after entering', () => {
+  const F = HW.flow;
+  const f = F.create(HW.save.defaults());
+  for (let i = 0; i < 5; i++) F.handle(f, { type: 'confirm' });
+  assert.equal(f.state, 'playing');
+  F.handle(f, { type: 'won', results: { lines: [], total: 0, grade: 'F', newMasks: [], newLevel: null } });
+  for (const type of ['click', 'confirm', 'back']) F.handle(f, { type });
+  assert.equal(f.state, 'results');
+  F.update(f, 0.3);
+  F.handle(f, { type: 'click' });
+  assert.equal(f.state, 'results');
+  F.update(f, 0.25);
+  F.handle(f, { type: 'click' });
+  assert.equal(f.state, 'levelSelect');
+  for (let i = 0; i < 5; i++) F.handle(f, { type: 'confirm' });
+  F.handle(f, { type: 'won', results: { lines: [], total: 0, grade: 'F', newMasks: [], newLevel: null } });
+  F.handle(f, { type: 'abort' }); // error-screen escape ignores the lock
   assert.equal(f.state, 'levelSelect');
 });
 test('title ignores back; playing ignores clicks and confirms', () => {
@@ -304,4 +325,49 @@ test('hud combo bar drains with the 2.5 s window', () => {
   assert.ok(Math.abs(HW.hud.comboLeft({ chain: [300], lastKillT: 1 }, 1) - 1) < 1e-9);
   assert.ok(Math.abs(HW.hud.comboLeft({ chain: [300], lastKillT: 1 }, 2.25) - 0.5) < 1e-9);
   assert.equal(HW.hud.comboLeft({ chain: [300], lastKillT: 1 }, 4), 0);
+});
+
+test('hud: WRACAJ DO AUTA is drawn whenever cleared (no blink-off frames)', () => {
+  const H = loadHW(docStub());
+  const ctx = stubCtx([]);
+  const world = H.world.load(H.levels.blok, 'lajkonik', 1);
+  world.status = 'cleared';
+  for (const time of [0, 0.3, 0.65, 0.75, 1.1, 2.9]) {
+    world.time = time;
+    const t = textsDrawn(H, () => H.hud.draw(ctx, world, H.camera.create()));
+    assert.ok(t.includes('WRACAJ DO AUTA'), 'missing at t=' + time);
+  }
+});
+test('hud: arrow target is the car on floor 0, the stairs toward floor 0 elsewhere', () => {
+  const H = loadHW(docStub());
+  const T = H.tilemap;
+  const level = {
+    id: 'blok', targetScore: 1000,
+    floors: [
+      { map: ['#######', '#P..S.#', '#######'], enemies: [], items: [], neon: [], stairs: [{ at: [4, 1], to: { floor: 1, at: [2, 1] } }] },
+      { map: ['#######', '#S.S..#', '#######'], enemies: [], items: [], neon: [],
+        stairs: [{ at: [1, 1], to: { floor: 2, at: [1, 1] } }, { at: [3, 1], to: { floor: 0, at: [4, 1] } }] },
+    ],
+  };
+  const world = H.world.load(level, 'lajkonik', 1);
+  assert.deepEqual({ ...H.hud.target(world) }, { x: T.center(1), y: T.center(1) });
+  world.floorIndex = 1;
+  assert.deepEqual({ ...H.hud.target(world) }, { x: T.center(3), y: T.center(1) });
+});
+test('hud: arrow orbits the player on screen and points at the target', () => {
+  const H = loadHW(docStub());
+  const world = H.world.load(H.levels.blok, 'lajkonik', 1);
+  const cam = H.camera.create();
+  cam.x = world.player.x - 30; cam.y = world.player.y; // player 30 px right of screen centre
+  const car = H.hud.target(world);
+  world.player.x = car.x + 100; world.player.y = car.y; // car straight to the left
+  cam.x = world.player.x - 30;
+  const a = H.hud.arrow(world, cam);
+  const px = H.camera.W / 2 + 30, py = H.camera.H / 2;
+  assert.ok(Math.abs(Math.hypot(a.x - px, a.y - py) - H.hud.ARROW_R) < 1e-6);
+  assert.ok(a.x < px, 'arrow sits on the car side of the player');
+  assert.ok(Math.abs(Math.abs(a.angle) - Math.PI) < 1e-6, 'points left');
+});
+test('scoring exports the combo window used by the hud', () => {
+  assert.equal(HW.scoring.WINDOW, 2.5);
 });
