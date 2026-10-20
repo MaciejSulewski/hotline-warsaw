@@ -44,10 +44,10 @@ test('bolek starts with knife; czapka has shield', () => {
   assert.equal(HW.masks.lolek.perk, 'doorStun');
   assert.equal(HW.masks.czapka.name, 'Czapka milicjanta');
 });
-test('player cannot walk through a closed door', () => {
+test('player is blocked by a closed door on contact (door then swings, see door.test.js)', () => {
   const w = HW.world.load(makeLevel(doorRoom), 'lajkonik');
   w.player.x = 56; w.player.y = 40; // tile (3,2); vertical door segment at x=72
-  run(w, { x: 1, y: 0 }, 1.5);
+  run(w, { x: 1, y: 0 }, 0.1);
   assert.ok(w.player.x > 60 && w.player.x <= 67.01, String(w.player.x));
 });
 test('door geometry for horizontal and vertical doors', () => {
