@@ -146,3 +146,38 @@ test('main: first gesture starts audio once, M toggles mute', () => {
   HW.synth.setMuted(!HW.synth.isMuted());
   assert.equal(HW.synth.master().gain.value, 0);
 });
+
+test('main: audio retries resume() on each gesture until the context is running', () => {
+  const { FakeCtx } = makeFake();
+  let resumes = 0;
+  class Suspended extends FakeCtx {
+    constructor() { super(); this.state = 'suspended'; }
+    resume() { resumes++; return { then() {} }; }
+  }
+  const gl = {};
+  const ctx2d = new Proxy({}, { get: () => () => {}, set: () => true });
+  const canvas = { width: 0, height: 0, style: {}, addEventListener() {}, getContext: () => ctx2d, getBoundingClientRect: () => ({ left: 0, top: 0, width: 480, height: 270 }) };
+  const HW = loadHW({
+    AudioContext: Suspended,
+    setInterval: () => 1, clearInterval: () => {},
+    document: { getElementById: () => canvas, createElement: () => canvas },
+    addEventListener: (t, fn) => { (gl[t] = gl[t] || []).push(fn); },
+    removeEventListener: () => {},
+    innerWidth: 960, innerHeight: 540,
+    requestAnimationFrame: () => 1,
+    performance: { now: () => 0 },
+  });
+  const gesture = () => gl.pointerdown[0]({});
+  gesture();
+  assert.ok(HW.synth.ctx());
+  const r1 = resumes;
+  assert.ok(r1 >= 1);
+  gesture();
+  assert.ok(resumes > r1, 'second gesture resumed again');
+  HW.synth.ctx().state = 'running';
+  gesture();
+  const r2 = resumes;
+  gesture();
+  gl.keydown.forEach((f) => f({ code: 'KeyA' }));
+  assert.equal(resumes, r2, 'no more resume once running');
+});

@@ -4,12 +4,13 @@
   const PREVENT = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
 
   // Keyboard + mouse listeners. "Pressed" flags latch until consumed: sample() clears the
-  // fire/throw/execute latches; keyPressed(code) clears that key's latch.
+  // fire/throw/execute latches; keyPressed(code) clears that key's latch; clickPressed() clears
+  // the menu-click latch (independent of firePressed). `mouse` is the cursor in canvas pixels.
   function attach(canvas) {
     const held = {};
     const latched = {};
     const mouse = { x: HW.camera.W / 2, y: HW.camera.H / 2 }; // canvas pixels
-    let lmb = false, firePressed = false, throwPressed = false, executePressed = false;
+    let lmb = false, clicked = false, firePressed = false, throwPressed = false, executePressed = false;
     const on = (type, fn) => globalThis.addEventListener(type, fn);
 
     on('keydown', (e) => {
@@ -29,7 +30,7 @@
       mouse.y = (e.clientY - r.top) * HW.camera.H / r.height;
     });
     on('mousedown', (e) => {
-      if (e.button === 0) { lmb = true; firePressed = true; }
+      if (e.button === 0) { lmb = true; firePressed = true; clicked = true; }
       else if (e.button === 2) throwPressed = true;
       e.preventDefault();
     });
@@ -58,7 +59,13 @@
       return v;
     }
 
-    return { sample, keyPressed, mouse };
+    function clickPressed() {
+      const v = clicked;
+      clicked = false;
+      return v;
+    }
+
+    return { sample, keyPressed, clickPressed, mouse };
   }
 
   HW.input = { attach };

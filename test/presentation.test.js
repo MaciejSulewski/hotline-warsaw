@@ -204,6 +204,22 @@ test('input latches pressed flags until sampled and converts aim to world', () =
   assert.equal(inp.keyPressed('KeyR'), true);
   assert.equal(inp.keyPressed('KeyR'), false);
 });
+test('input: clickPressed latches a left click independently of sample()', () => {
+  const env = makeEnv();
+  const H = loadHW({ addEventListener: env.addEventListener });
+  const inp = H.input.attach(env.game);
+  const cam = H.camera.create();
+  assert.equal(inp.clickPressed(), false);
+  env.fire('mousedown', { button: 2 });
+  assert.equal(inp.clickPressed(), false, 'right button is not a click');
+  env.fire('mousedown', { button: 0 });
+  assert.equal(inp.sample(cam).firePressed, true);
+  assert.equal(inp.clickPressed(), true, 'sample() does not consume the click');
+  assert.equal(inp.clickPressed(), false);
+  env.fire('mousedown', { button: 0 });
+  inp.clickPressed();
+  assert.equal(inp.sample(cam).firePressed, true, 'clickPressed() does not consume firePressed');
+});
 
 // ---- level draft -------------------------------------------------------------
 test('blok draft level validates', () => {
@@ -273,12 +289,62 @@ test('renderer draws ~60 frames of a live blok level without throwing', () => {
   assert.equal(world.status, 'dead');
   assert.ok(sawEvents > 0, 'the sim produced events (swings) that fx consumed');
 });
-test('main boots, runs frames, restarts on R and survives input', () => {
+// Canvas pixel (x, y) → client coords on the 960×540 stub canvas.
+function click(env, x, y) {
+  env.fire('mousemove', { clientX: x * 2, clientY: y * 2 });
+  env.fire('mousedown', { button: 0 });
+  env.fire('mouseup', { button: 0 });
+}
+function press(env, code) {
+  env.fire('keydown', { code });
+  env.fire('keyup', { code });
+}
+function makeStorage() {
+  const data = {};
+  return { data, getItem: (k) => (k in data ? data[k] : null), setItem: (k, v) => { data[k] = String(v); } };
+}
+// title → levelSelect → phoneCall (skipped) → maskSelect → playing, by mouse and keyboard.
+function driveToPlaying(env, H) {
+  const st = H.main.state;
+  env.tick();
+  if (st.flow.state === 'title') { click(env, 240, 135); env.tick(); }
+  assert.equal(st.flow.state, 'levelSelect');
+  const row = H.screens.layout(st.flow)[0];
+  click(env, row.x + row.w / 2, row.y + row.h / 2); env.tick();
+  assert.equal(st.flow.state, 'phoneCall');
+  for (let i = 0; i < 20; i++) env.tick();
+  press(env, 'Space'); env.tick();
+  assert.equal(st.flow.state, 'phoneCall');
+  assert.equal(st.flow.phone.done, true);
+  press(env, 'Space'); env.tick();
+  assert.equal(st.flow.state, 'maskSelect');
+  press(env, 'Enter'); env.tick();
+  assert.equal(st.flow.state, 'playing');
+}
+
+test('main boots to the title screen and scales the canvas', () => {
   const env = makeEnv();
   const H = loadHW(env);
   assert.ok(H.main && H.main.state, 'main booted');
+  assert.equal(H.main.state.flow.state, 'title');
   assert.equal(env.game.width, 480); assert.equal(env.game.height, 270);
   assert.equal(env.game.style.width, '960px');
+  for (let i = 0; i < 30; i++) env.tick();
+  assert.equal(H.main.state.error, null);
+  env.size.w = 1920; env.size.h = 1080;
+  env.fire('resize', {});
+  assert.equal(env.game.style.width, '1920px');
+});
+test('main drives the full flow through results and back to level select', () => {
+  const env = makeEnv();
+  env.localStorage = makeStorage();
+  const H = loadHW(env);
+  const st = H.main.state;
+  driveToPlaying(env, H);
+  assert.ok(st.world, 'world loaded on entering playing');
+  assert.equal(st.flow.world, st.world);
+  assert.equal(st.world.mask, 'lajkonik');
+  assert.equal(st.world.level, H.levels.blok);
   env.fire('keydown', { code: 'KeyD' });
   env.fire('mousemove', { clientX: 700, clientY: 200 });
   for (let i = 0; i < 60; i++) {
@@ -286,21 +352,83 @@ test('main boots, runs frames, restarts on R and survives input', () => {
     if (i % 15 === 1) env.fire('mouseup', { button: 0 });
     env.tick();
   }
-  const st = H.main.state;
+  env.fire('keyup', { code: 'KeyD' });
   assert.equal(st.error, null);
   assert.ok(st.world.time > 0.5, 'simulated ~1 s, got ' + st.world.time);
   const before = st.world;
-  env.fire('keydown', { code: 'KeyR' });
-  env.tick();
+  press(env, 'KeyR'); env.tick();
   assert.notEqual(st.world, before, 'R restarted the level');
   assert.ok(st.world.time < 0.1);
-  env.size.w = 1920; env.size.h = 1080;
-  env.fire('resize', {});
-  assert.equal(env.game.style.width, '1920px');
+  assert.equal(st.world.mask, 'lajkonik', 'restart keeps the mask');
+  st.world.status = 'won';
+  env.tick();
+  assert.equal(st.flow.state, 'results');
+  const r = st.flow.results;
+  assert.equal(r.lines.length, 5);
+  assert.ok(typeof r.total === 'number' && typeof r.grade === 'string');
+  assert.deepEqual([...r.newMasks].slice(0, 1), ['bolek']);
+  const saved = JSON.parse(env.localStorage.data[H.save.KEY]);
+  assert.ok(saved.unlockedMasks.includes('bolek'));
+  assert.ok(saved.bestScores.blok);
+  assert.ok(st.flow.save.unlockedMasks.includes('bolek'), 'flow sees the new save');
+  for (let i = 0; i < 30; i++) env.tick();
+  click(env, 240, 135); env.tick();
+  assert.equal(st.flow.state, 'levelSelect');
+  assert.equal(st.world, null);
+  assert.equal(st.error, null);
+});
+test('main: Esc leaves playing for level select; music follows the flow', () => {
+  const env = makeEnv();
+  const H = loadHW(env);
+  const log = [];
+  H.synth.init = () => true;
+  H.synth.ctx = () => ({ state: 'running', resume() {} });
+  H.music.start = (lv) => log.push(['start', lv.root]);
+  H.music.stop = () => log.push(['stop']);
+  H.music.muffle = (on) => log.push(['muffle', on]);
+  env.fire('pointerdown', {}); // audio gesture
+  driveToPlaying(env, H);
+  assert.deepEqual(log, [['start', H.levels.blok.music.root]]);
+  press(env, 'Escape'); env.tick();
+  assert.equal(H.main.state.flow.state, 'levelSelect');
+  assert.equal(H.main.state.world, null);
+  assert.deepEqual(log.slice(1), [['muffle', false], ['stop']]);
+  log.length = 0;
+  driveToPlaying(env, H);
+  H.main.state.world.status = 'won';
+  env.tick();
+  assert.deepEqual(log, [['start', H.levels.blok.music.root], ['muffle', true]]);
+});
+test('main: input latched in menus does not fire on the first gameplay step', () => {
+  const env = makeEnv();
+  const H = loadHW(env);
+  const st = H.main.state;
+  env.tick();
+  click(env, 240, 135); env.tick();
+  env.fire('mousemove', { clientX: 4, clientY: 4 });
+  env.fire('mousedown', { button: 0 }); // click on empty space in level select
+  env.fire('mouseup', { button: 0 });
+  env.fire('mousedown', { button: 2 });
+  env.tick();
+  assert.equal(st.flow.state, 'levelSelect');
+  press(env, 'Enter'); env.tick();
+  press(env, 'Enter'); env.tick(); // skip
+  press(env, 'Enter'); env.tick(); // confirm call
+  const seen = [];
+  const step = H.sim.step;
+  H.sim.step = (w, input, dt) => { seen.push({ ...input }); return step(w, input, dt); };
+  press(env, 'Enter'); env.tick();
+  env.tick();
+  assert.equal(st.flow.state, 'playing');
+  assert.ok(seen.length > 0);
+  assert.equal(seen[0].firePressed, false);
+  assert.equal(seen[0].throwPressed, false);
+  assert.equal(seen[0].executePressed, false);
 });
 test('main shows an error overlay instead of crashing and R recovers', () => {
   const env = makeEnv();
   const H = loadHW(env);
+  driveToPlaying(env, H);
   env.tick();
   const step = H.sim.step;
   H.sim.step = () => { throw new Error('boom'); };
@@ -309,7 +437,8 @@ test('main shows an error overlay instead of crashing and R recovers', () => {
   try { env.tick(); } finally { console.error = err; }
   assert.ok(H.main.state.error);
   H.sim.step = step;
-  env.fire('keydown', { code: 'KeyR' });
+  press(env, 'KeyR');
   env.tick();
   assert.equal(H.main.state.error, null);
+  assert.ok(H.main.state.world.time < 0.1);
 });
