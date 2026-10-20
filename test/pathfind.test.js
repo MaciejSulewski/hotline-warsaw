@@ -75,11 +75,11 @@ test('optimal vs Dijkstra on seeded random maps', () => {
   };
   let seed = 12345;
   const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
-  for (let i = 0; i < 400; i++) {
+  for (let i = 0; i < 6000; i++) {
     const rows = [];
     for (let y = 0; y < 12; y++) {
       let r = '';
-      for (let x = 0; x < 12; x++) r += rnd() < 0.28 ? '#' : '.';
+      for (let x = 0; x < 12; x++) r += rnd() < 0.3 ? '#' : '.';
       rows.push(r);
     }
     const map = T.parse(rows);
