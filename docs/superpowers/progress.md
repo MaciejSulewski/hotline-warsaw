@@ -82,3 +82,7 @@ Task 8: complete (commits c816bd3..966f0fa, review clean; controller confirmed s
 Task 9: minor (deferred): zero-enemy level never clears (fixture convenience, undocumented); lastKillT -Infinity → null after JSON; redundant door line in onKill and non-execution kills with door:true become kind door; no tests for dead blocking cleared/won, thrown 500; stairs data read from world.level each step
 - Ruling R18: accepted Task 9 deviations — zero-enemy levels never clear; combat scoring-hook test stubs onKill — cost if wrong: trivial.
 Task 9: complete (commits 603d95c..9beb566, review clean)
+- Ruling R19: Tasks 10 and 11 (mask unlocks, save) dispatched as one batch with one review — both small pure-logic modules, 11 consumes 10 — cost if wrong: none.
+Task 10: complete (commits 1ddce33..4a7105a, batched review clean)
+Task 10-11: minor (deferred): malformed bestScores entry (e.g. {blok:5}) can never be replaced; bestScores assigned by reference in load; HW.masks mixes table entries with levelOrder/nextLevel/unlocksAfter — iterating HW.masks for ids sees functions (carry into Tasks 12/14: use an explicit mask id list); coverage gaps in save/masks tests
+Task 11: complete (commits 4a7105a..f1057ad, batched review clean)
