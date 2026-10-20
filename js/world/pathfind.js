@@ -7,14 +7,15 @@
     [1, 1], [1, -1], [-1, 1], [-1, -1],
   ];
 
-  // Binary min-heap of node indices keyed by f[] (ties broken by larger g).
-  function makeHeap(f, g) {
+  // Binary min-heap of immutable {n, f, g} entries (stale entries are skipped
+  // by the caller via the closed set). Ties broken by larger g.
+  function makeHeap() {
     const a = [];
-    const less = (i, j) => f[i] < f[j] || (f[i] === f[j] && g[i] > g[j]);
+    const less = (x, y) => x.f < y.f || (x.f === y.f && x.g > y.g);
     return {
       size() { return a.length; },
-      push(n) {
-        let i = a.push(n) - 1;
+      push(e) {
+        let i = a.push(e) - 1;
         while (i > 0) {
           const p = (i - 1) >> 1;
           if (!less(a[i], a[p])) break;
@@ -56,26 +57,26 @@
     const [gx, gy] = goal;
     if (sx === gx && sy === gy) return [];
     const walk = (x, y) => T.isWalkable(T.get(map, x, y));
-    if (!walk(gx, gy)) return null;
-
     const W = map.w, H = map.h;
+    if (sx < 0 || sy < 0 || sx >= W || sy >= H) return null;
     if (gx < 0 || gy < 0 || gx >= W || gy >= H) return null;
+    if (!walk(gx, gy)) return null;
     const idx = (x, y) => y * W + x;
     const n = W * H;
     const g = new Float64Array(n).fill(Infinity);
     const f = new Float64Array(n).fill(Infinity);
     const parent = new Int32Array(n).fill(-1);
     const closed = new Uint8Array(n);
-    const heap = makeHeap(f, g);
+    const heap = makeHeap();
 
     const s = idx(sx, sy);
     const goalIdx = idx(gx, gy);
     g[s] = 0;
     f[s] = octile(gx - sx, gy - sy);
-    heap.push(s);
+    heap.push({ n: s, f: f[s], g: 0 });
 
     while (heap.size()) {
-      const cur = heap.pop();
+      const cur = heap.pop().n;
       if (closed[cur]) continue;
       closed[cur] = 1;
       if (cur === goalIdx) {
@@ -96,7 +97,7 @@
           g[ni] = ng;
           f[ni] = ng + octile(gx - nx, gy - ny);
           parent[ni] = cur;
-          heap.push(ni);
+          heap.push({ n: ni, f: f[ni], g: ng });
         }
       }
     }
