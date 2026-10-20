@@ -78,3 +78,7 @@ Task 8: fix round 1/5 (6 addressed, 0 open — unreachable goal stuck; stale pat
 Task 8: fix round 2/5 (1 addressed, 0 open — visible-but-unreachable chase loop; wideClear now treats solid tiles incl. windows as blocking; commits 30998a0..966f0fa)
 Task 8: minor (deferred): re-sighting in search/return/investigate pays full reaction delay; no tests for gun standoff at 90 px, aim spread, hearing ignored while seeing; return-to-patrol test doesn't exercise stationary return; sealed-pocket test's chase half is trivial
 Task 8: complete (commits c816bd3..966f0fa, review clean; controller confirmed suite green)
+- Ruling R17 (Task 9 dispatch): door-execution counts as kind 'door' only; boldness on melee/execution/door kills of gun holders; score buckets kills/combo/bold; kinds stored JSON-serialisable; sim frozen on 'won', continues on 'dead'; stairs via stairLock until player leaves S tile — cost if wrong: scoring tweaks.
+Task 9: minor (deferred): zero-enemy level never clears (fixture convenience, undocumented); lastKillT -Infinity → null after JSON; redundant door line in onKill and non-execution kills with door:true become kind door; no tests for dead blocking cleared/won, thrown 500; stairs data read from world.level each step
+- Ruling R18: accepted Task 9 deviations — zero-enemy levels never clear; combat scoring-hook test stubs onKill — cost if wrong: trivial.
+Task 9: complete (commits 603d95c..9beb566, review clean)
