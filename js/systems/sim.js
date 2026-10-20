@@ -11,8 +11,10 @@
   function step(world, input, dt) {
     world.noises.length = 0;
     world.time += dt;
-    HW.player.update(world, input, dt);
     const floor = world.floors[world.floorIndex];
+    world.player.cooldown = Math.max(0, world.player.cooldown - dt);
+    for (const e of floor.enemies) e.cooldown = Math.max(0, e.cooldown - dt);
+    HW.player.update(world, input, dt);
     const chars = [world.player].concat(floor.enemies.filter((e) => e.alive && e.state !== 'downed'));
     for (const door of floor.doors) {
       for (const c of chars) {
@@ -24,6 +26,8 @@
       }
     }
     for (const door of floor.doors) HW.door.update(world, door, dt);
+    HW.projectile.update(world, dt);
+    HW.combat.updateThrown(world, dt);
   }
 
   HW.sim = { step, emptyInput };

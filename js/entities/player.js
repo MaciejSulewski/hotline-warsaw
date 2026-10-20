@@ -18,7 +18,14 @@
 
   function update(world, input, dt) {
     const p = world.player;
+    if (!p.alive) return;
     const floor = world.floors[world.floorIndex];
+    p.facing = M.angleTo(p.x, p.y, input.aim.x, input.aim.y);
+    if (p.executing) {
+      p.vx = 0; p.vy = 0;
+      HW.combat.updateExecution(world, p, dt);
+      return;
+    }
     const dir = M.norm(input.move.x, input.move.y);
     const step = p.speed / ACCEL_TIME * dt;
     p.vx = M.approach(p.vx, dir.x * p.speed, step);
@@ -27,6 +34,14 @@
     const pos = HW.collision.moveCircle(floor.map, segs, p.x, p.y, p.r, p.vx * dt, p.vy * dt);
     p.x = pos.x; p.y = pos.y;
     p.facing = M.angleTo(p.x, p.y, input.aim.x, input.aim.y);
+
+    const auto = p.weapon && HW.weapons[p.weapon.id].auto;
+    if (input.firePressed || (auto && input.fire)) HW.combat.attack(world, p, p.facing);
+    if (input.throwPressed) {
+      if (p.weapon) HW.combat.throwWeapon(world, p, p.facing);
+      else HW.combat.pickUp(world, p);
+    }
+    if (input.executePressed) HW.combat.startExecution(world, p);
   }
 
   HW.player = { create, update };
