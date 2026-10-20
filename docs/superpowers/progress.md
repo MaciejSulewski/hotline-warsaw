@@ -43,3 +43,8 @@ Mirror: this ledger is copied to docs/superpowers/progress.md and committed afte
 - Ruling R2: characters (player and enemies) carry `cooldown: 0` from creation (T5), and `combat.attack` decrements/uses it — needed by T7/T8 — cost if wrong: trivial.
 
 ## Tasks
+- Ruling: implementers commit only; controller pushes after each task review — keeps the token-sensitive push in one place and only reviewed work reaches GitHub — cost if wrong: none.
+- Ruling R3: canonical test command is `node --test "test/**/*.test.js"` (Node 24 rejects `node --test test/`); `test/index.js` aggregator removed — a shim that double-runs under bare `node --test` is worse than a glob — cost if wrong: none (docs updated: plan, CLAUDE.md).
+- Ruling R4: subagent commits use the Co-Authored-By trailer their own harness specifies — honest attribution — cost if wrong: cosmetic.
+Task 1: minor (deferred): angleDiff large-angle test only bounds result; inArc edge/norm nonzero untested; scaffold test doesn't check duplicate/missing script tags; rng.pick([]) unguarded
+Task 1: complete (commits 01d19cc..b5c021a, review clean)
