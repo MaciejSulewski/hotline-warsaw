@@ -33,7 +33,7 @@ test('sprinting through a door knocks down an enemy for 2.5 s', () => {
   const e = placeEnemy(w);
   run(w, { x: 1, y: 0 }, 0.5);
   assert.equal(e.state, 'downed');
-  assert.equal(e.downedT, 2.5);
+  assert.ok(e.downedT > 2.0 && e.downedT <= 2.5, String(e.downedT)); // ai.update counts it down
   assert.equal(e.downedBy, 'door');
   assert.ok(w.events.some((ev) => ev.type === 'knockdown'));
   assert.equal(w.events.filter((ev) => ev.type === 'door').length, 1);
@@ -44,7 +44,7 @@ test('lolek doubles the door knockdown to 5 s', () => {
   const e = placeEnemy(w);
   run(w, { x: 1, y: 0 }, 0.5);
   assert.equal(e.state, 'downed');
-  assert.equal(e.downedT, 5);
+  assert.ok(e.downedT > 4.5 && e.downedT <= 5, String(e.downedT));
 });
 
 test('slowly nudging a door does not knock down', () => {

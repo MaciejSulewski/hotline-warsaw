@@ -15,6 +15,7 @@
     world.player.cooldown = Math.max(0, world.player.cooldown - dt);
     for (const e of floor.enemies) e.cooldown = Math.max(0, e.cooldown - dt);
     HW.player.update(world, input, dt);
+    for (const e of floor.enemies) if (e.alive) HW.ai.update(world, e, dt);
     const chars = [world.player].concat(floor.enemies.filter((e) => e.alive && e.state !== 'downed'));
     for (const door of floor.doors) {
       for (const c of chars) {
