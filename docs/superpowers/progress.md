@@ -48,3 +48,5 @@ Mirror: this ledger is copied to docs/superpowers/progress.md and committed afte
 - Ruling R4: subagent commits use the Co-Authored-By trailer their own harness specifies — honest attribution — cost if wrong: cosmetic.
 Task 1: minor (deferred): angleDiff large-angle test only bounds result; inArc edge/norm nonzero untested; scaffold test doesn't check duplicate/missing script tags; rng.pick([]) unguarded
 Task 1: complete (commits 01d19cc..b5c021a, review clean)
+Task 2: minor (deferred): world.test 'window blocks movement' first assertion is a no-op; coverage gaps (negative/diagonal cast, start-in-wall, seg-vs-tile nearest, door-escape path, y-axis stop); stale comment collision.js:35; per-substep closure in moveCircle; overlapping circle can't slide tangentially; collinear ray along segment not blocked (comment); RED run after implementation
+Task 2: complete (commits bd07f77..d4ed09f, review clean)
