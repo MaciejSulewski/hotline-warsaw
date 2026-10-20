@@ -57,3 +57,7 @@ Task 3: complete (commits 18e8769..500e2b5, review clean)
 - Ruling R6: fists cooldown 0.3 s (spec silent) — cost if wrong: tuning.
 Task 4: minor (deferred): stair test asserts only error count; horizontal (left+right walled) door never asserted valid, edge door untested; weapon table test covers subset of fields; weapon:null reported as unknown; empty-map case untested; validate(null) throws (controller confirmed suite 41/41)
 Task 4: complete (commits b562010..0006afa, review clean)
+- Ruling R7 (Task 5 dispatch): door hinge at tile's left-edge midpoint (horizontal, closedAngle 0) or top-edge midpoint (vertical, π/2); enemy default weapons dresiarz→pipe, bandzior→pistol, milicjant→ak; world.load must not mutate level data — plan left these open — cost if wrong: small geometry/data tweak.
+Task 5: minor (deferred): ambiguous door orientation untested (validator rejects); unknown maskId silently no perk; explicit weapon:null throws in enemy.create (validator rejects); diagonal test asserts velocity only; report's rows.slice claim doesn't match diff
+- Ruling R8: world.noises cleared at START of sim.step (not end as shared-shapes says) — lets the player's shot in step N reach AI in step N; consequence: enemy gunshots emitted after the AI pass are not heard by other enemies — acceptable since shooters are already engaged — cost if wrong: move the clear and adjust one test.
+Task 5: complete (commits 75da4bb..1019e65, review clean)
