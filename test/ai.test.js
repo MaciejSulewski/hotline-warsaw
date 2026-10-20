@@ -254,3 +254,18 @@ test('gun enemy with empty gun drops it and fights with fists', () => {
   assert.ok(e.x > x0 + 10, 'closes in to melee');
   assert.equal(evs(w, 'click').length, 0);
 });
+
+test('visible but unreachable player: stays in chase, holds position, keeps shooting', () => {
+  const rows = ['####################', '#P.................#', '#wwwwwwwwwwwwwwwwww#']
+    .concat(Array(6).fill('#..................#')).concat(['####################']);
+  const w = build(rows, [def('bandzior', [5, 1], { facing: Math.PI / 2 })], [px(5), px(7)]);
+  w.player.invulnT = 999;
+  const e = enemy(w);
+  e.state = 'chase';
+  const x0 = e.x, y0 = e.y;
+  step(w, 120);
+  assert.equal(e.state, 'chase');
+  assert.equal(e.x, x0);
+  assert.equal(e.y, y0);
+  assert.ok(evs(w, 'shot').length >= 2);
+});

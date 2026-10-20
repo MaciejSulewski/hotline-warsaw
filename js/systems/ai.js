@@ -24,11 +24,20 @@
     return HW.raycast.clear(floor.map, segs || floor.doors.map(HW.door.segment), e.x, e.y, x, y, 'sight');
   }
 
-  // True when a body-width corridor along the line to (x, y) is free of walls and doors.
+  // True when a body-width corridor along the line to (x, y) is free of walls, windows and doors.
   function wideClear(floor, segs, e, x, y) {
     const a = Math.atan2(y - e.y, x - e.x) + Math.PI / 2;
     const ox = Math.cos(a) * e.r, oy = Math.sin(a) * e.r;
-    return [-1, 0, 1].every((k) => HW.raycast.clear(floor.map, segs, e.x + ox * k, e.y + oy * k, x + ox * k, y + oy * k, 'sight'));
+    return [-1, 0, 1].every((k) => {
+      const x0 = e.x + ox * k, y0 = e.y + oy * k, x1 = x + ox * k, y1 = y + oy * k;
+      if (!HW.raycast.clear(floor.map, segs, x0, y0, x1, y1, 'sight')) return false;
+      // windows ('w') let sight through but block movement
+      const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 4);
+      for (let i = 0; i <= n; i++) {
+        if (T.isSolid(T.get(floor.map, T.toTile(x0 + (x1 - x0) * i / n), T.toTile(y0 + (y1 - y0) * i / n)))) return false;
+      }
+      return true;
+    });
   }
 
   function setState(e, state) {
@@ -110,7 +119,7 @@
       if (dist <= w.range - 2) { stop(e); return; }
     }
     if (walkTo(floor, segs, e, p.x, p.y, CHASE_SPEED, dt, wideClear(floor, segs, e, p.x, p.y))) {
-      if (e.path === false) startSearch(e, p.x, p.y);
+      stop(e); // visible but unreachable (e.g. behind a window): hold position and keep shooting
       return;
     }
     e.facing = angle;
