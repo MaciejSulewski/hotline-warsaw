@@ -50,3 +50,6 @@ Task 1: minor (deferred): angleDiff large-angle test only bounds result; inArc e
 Task 1: complete (commits 01d19cc..b5c021a, review clean)
 Task 2: minor (deferred): world.test 'window blocks movement' first assertion is a no-op; coverage gaps (negative/diagonal cast, start-in-wall, seg-vs-tile nearest, door-escape path, y-axis stop); stale comment collision.js:35; per-substep closure in moveCircle; overlapping circle can't slide tangentially; collinear ray along segment not blocked (comment); RED run after implementation
 Task 2: complete (commits bd07f77..d4ed09f, review clean)
+Task 3: fix round 1/5 (3 addressed, 0 open — heap key mutation → suboptimal paths; OOB start; goal bounds order; commits 2eed9d1..500e2b5)
+Task 3: minor (deferred): out-of-bounds start equal to goal returns [] not null; optimality fuzz takes ~1.3 s of suite time
+Task 3: complete (commits 18e8769..500e2b5, review clean)
