@@ -319,6 +319,34 @@ test('renderer draws ~60 frames of a live blok level without throwing', () => {
   assert.equal(world.status, 'dead');
   assert.ok(sawEvents > 0, 'the sim produced events (swings) that fx consumed');
 });
+test('renderer.flicker: a deterministic, time-based failing-tube stutter', () => {
+  const f = HW.renderer.flicker;
+  let dark = 0, n = 0;
+  for (let t = 0; t < 12; t += 1 / 60, n++) {
+    const a = f(t, 0);
+    assert.ok(a > 0 && a <= 1, 'alpha ' + a + ' at ' + t);
+    assert.equal(f(t, 0), a, 'same time, same alpha');
+    if (a < 0.5) dark++;
+  }
+  assert.ok(dark / n >= 0.1 && dark / n <= 0.4, 'dark ' + Math.round(dark / n * 100) + '% of the time');
+  // a phase offset shifts the pattern, so neighbouring signs do not blink in unison
+  let differ = 0;
+  for (let t = 0; t < 12; t += 1 / 60) if ((f(t, 0) < 0.5) !== (f(t, 0.9) < 0.5)) differ++;
+  assert.ok(differ > 0);
+});
+test('renderer draws a level with flickering neon (komenda) without throwing', () => {
+  const env = makeEnv();
+  const H = loadHW(env);
+  const sprites = H.sprites.build();
+  const ctx = makeCanvas(env.calls).getContext('2d');
+  const world = H.world.load(H.levels.komenda, 'lajkonik', 7);
+  assert.ok(world.level.floors[0].neon.some((n) => n.flicker));
+  const cam = H.camera.create();
+  cam.cursor = { x: 0, y: 0 };
+  const fx = H.fx.create();
+  for (let i = 0; i < 30; i++) H.renderer.draw(ctx, world, cam, fx, sprites, i / 10);
+  assert.ok(env.calls.includes('drawImage'));
+});
 // Canvas pixel (x, y) → client coords on the 960×540 stub canvas.
 function click(env, x, y) {
   env.fire('mousemove', { clientX: x * 2, clientY: y * 2 });

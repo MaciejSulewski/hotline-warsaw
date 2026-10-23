@@ -130,7 +130,17 @@
     return s;
   }
 
-  function drawNeon(ctx, world, dt) {
+  // Signs marked `flicker: true` (the failing MO tubes at the Komenda) follow a fixed stutter that
+  // repeats every 2.4 s instead of the random hum: 1 = lit, 0 = dropout, one step per 0.1 s.
+  // Deterministic and driven by the render clock; `phase` (s) offsets one sign from another.
+  const STUTTER = [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1];
+  function flicker(t, phase) {
+    const n = STUTTER.length;
+    const i = ((Math.floor((t + phase) * 10) % n) + n) % n;
+    return STUTTER[i] ? 0.95 : 0.15;
+  }
+
+  function drawNeon(ctx, world, dt, t) {
     const defs = (world.level.floors[world.floorIndex] || {}).neon || [];
     if (!defs.length) return;
     ctx.save();
@@ -139,10 +149,14 @@
     ctx.globalCompositeOperation = 'lighter';
     for (const n of defs) {
       const s = neonSign(n);
-      // random flicker: brief dropouts plus a gentle hum
-      if (s.offT > 0) s.offT -= dt;
-      else if (Math.random() < 0.01) s.offT = 0.04 + Math.random() * 0.12;
-      s.alpha = s.offT > 0 ? 0.2 : 0.85 + Math.random() * 0.15;
+      if (n.flicker) {
+        s.alpha = flicker(t, n.at[0] * 0.13 + n.at[1] * 0.07);
+      } else {
+        // random flicker: brief dropouts plus a gentle hum
+        if (s.offT > 0) s.offT -= dt;
+        else if (Math.random() < 0.01) s.offT = 0.04 + Math.random() * 0.12;
+        s.alpha = s.offT > 0 ? 0.2 : 0.85 + Math.random() * 0.15;
+      }
       ctx.globalAlpha = s.alpha;
       ctx.drawImage(s.img, n.at[0] * TILE - 8, n.at[1] * TILE + 4 - 8);
     }
@@ -252,12 +266,12 @@
     if (world.player.alive) drawCharacter(ctx, sprites, world.player, 'player', t, world.mask);
     drawProjectiles(ctx, world, fx, sprites);
     ctx.drawImage(layers.walls, 0, 0);
-    drawNeon(ctx, world, dt);
+    drawNeon(ctx, world, dt, t);
     ctx.restore();
 
     drawTint(ctx, t);
     drawCrosshair(ctx, cam.cursor);
   }
 
-  HW.renderer = { draw };
+  HW.renderer = { draw, flicker };
 })(globalThis.HW);

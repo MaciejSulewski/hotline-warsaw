@@ -291,3 +291,144 @@ test('pewex: at least 3 doors have a guard right behind them (kick-open knockdow
   assert.ok(n >= 3, 'only ' + n + ' guarded doors');
 }));
 test('pewex: no enemy can see the car at spawn, nor from its patrol route', ok(() => nobodySeesTheCar(pewex)));
+
+// ---- level 3 specifics (spec §7, Task 17 brief) ----------------------------------
+const komenda = HW.levels.komenda;
+const ok3 = (fn) => () => { assert.ok(komenda, 'HW.levels.komenda is defined'); fn(); };
+
+// Rooms: 4-connected groups of walkable tiles with doors treated as walls. Returns a tile → room id grid.
+function roomsOf(map) {
+  const id = map.rows.map((r) => Array.from(r, () => -1));
+  let n = 0;
+  for (let y = 0; y < map.h; y++) for (let x = 0; x < map.w; x++) {
+    const ch = T.get(map, x, y);
+    if (id[y][x] !== -1 || ch === 'D' || !T.isWalkable(ch)) continue;
+    const stack = [[x, y]];
+    id[y][x] = n;
+    while (stack.length) {
+      const [cx, cy] = stack.pop();
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = cx + dx, ny = cy + dy, c = T.get(map, nx, ny);
+        if (c !== 'D' && T.isWalkable(c) && id[ny][nx] === -1) { id[ny][nx] = n; stack.push([nx, ny]); }
+      }
+    }
+    n++;
+  }
+  const size = new Array(n).fill(0);
+  for (const row of id) for (const r of row) if (r >= 0) size[r]++;
+  return { id, size };
+}
+
+test('komenda: header, music and phone call', ok3(() => {
+  assert.equal(komenda.id, 'komenda');
+  assert.equal(komenda.title, 'POZIOM 3: KOMENDA');
+  assert.equal(komenda.subtitle, 'Mokotów, 1988');
+  assert.equal(komenda.targetScore, 14000);
+  assert.deepEqual(JSON.parse(JSON.stringify(komenda.music)), { root: 'E', progression: [0, 5, 6, 4] });
+  assert.ok(komenda.phoneCall.length >= 3 && komenda.phoneCall.length <= 5, 'phone call has ' + komenda.phoneCall.length + ' lines');
+  for (const line of komenda.phoneCall) for (const ch of line.toUpperCase()) assert.ok(HW.font.GLYPHS[ch], 'glyph ' + ch);
+}));
+
+test('komenda: two floors joined by stairs both ways', ok3(() => {
+  assert.equal(komenda.floors.length, 2);
+  assert.ok(komenda.floors[0].stairs.some((s) => s.to.floor === 1));
+  assert.ok(komenda.floors[1].stairs.some((s) => s.to.floor === 0));
+}));
+
+test('komenda: milicjant and bandzior only, at least 5 milicjant with AKs, mixed guards and patrols', ok3(() => {
+  const all = enemiesOf(komenda);
+  for (const e of all) assert.ok(['milicjant', 'bandzior'].includes(e.type), 'enemy type ' + e.type);
+  const aks = all.filter((e) => e.type === 'milicjant' && e.weapon === 'ak').length;
+  assert.ok(aks >= 5, 'only ' + aks + ' milicjant with ak');
+  assert.ok(all.some((e) => e.type === 'bandzior'));
+  assert.ok(all.some((e) => e.patrol) && all.some((e) => !e.patrol));
+}));
+
+test('komenda: at least two AKs lie on the armoury floor, in one room', ok3(() => {
+  const found = komenda.floors.some((f) => {
+    const { id } = roomsOf(T.parse(f.map));
+    const perRoom = {};
+    for (const it of f.items || []) if (it.weapon === 'ak') perRoom[id[it.at[1]][it.at[0]]] = (perRoom[id[it.at[1]][it.at[0]]] || 0) + 1;
+    return Object.values(perRoom).some((n) => n >= 2);
+  });
+  assert.ok(found, 'no room holds two AKs');
+}));
+
+test('komenda: window bars stand between at least 3 cells and one corridor', ok3(() => {
+  // Each bar tile 'w' with walkable tiles on both sides (above/below or left/right) joins two rooms.
+  // Cells are small rooms; they must all face the same corridor through their bars.
+  const map = T.parse(komenda.floors[0].map);
+  const { id, size } = roomsOf(map);
+  const facing = {}; // corridor room → set of cell rooms seen through bars
+  for (const [x, y] of T.find(map, 'w')) {
+    for (const [dx, dy] of [[0, 1], [1, 0]]) {
+      const a = T.get(map, x - dx, y - dy), b = T.get(map, x + dx, y + dy);
+      if (!T.isWalkable(a) || !T.isWalkable(b) || a === 'D' || b === 'D') continue;
+      const ra = id[y - dy][x - dx], rb = id[y + dy][x + dx];
+      if (ra === rb) continue;
+      const [cell, corridor] = size[ra] < size[rb] ? [ra, rb] : [rb, ra];
+      if (size[cell] > 20) continue;
+      (facing[corridor] = facing[corridor] || new Set()).add(cell);
+    }
+  }
+  const best = Math.max(0, ...Object.values(facing).map((s) => s.size));
+  assert.ok(best >= 3, 'only ' + best + ' barred cells face one corridor');
+}));
+
+test('komenda: flickering cyan and magenta MO neon on the station facade', ok3(() => {
+  neonOnFacade(komenda, 'MO', 'cyan');
+  neonOnFacade(komenda, 'MO', 'magenta');
+  for (const n of komenda.floors[0].neon.filter((s) => s.text === 'MO')) assert.equal(n.flicker, true, n.color + ' MO flickers');
+}));
+
+test('komenda: the street around the car is drawn as pavement and asphalt', ok3(() => streetAroundCar(komenda)));
+test('komenda: at least 3 doors have a guard right behind them (kick-open knockdowns)', ok3(() => {
+  const n = guardedDoors(komenda);
+  assert.ok(n >= 3, 'only ' + n + ' guarded doors');
+}));
+test('komenda: no enemy can see the car at spawn, nor from its patrol route', ok3(() => nobodySeesTheCar(komenda)));
+
+test('komenda: each floor is one walkable region, so nobody behind bars is stranded as a turret', ok3(() => {
+  // R16: an enemy who sees the player but cannot path to them holds position and shoots.
+  // With every floor connected, an enemy seen through bars can always come out, and be reached.
+  komenda.floors.forEach((f, fi) => {
+    const map = T.parse(f.map);
+    const tiles = [];
+    for (let y = 0; y < map.h; y++) for (let x = 0; x < map.w; x++) if (T.isWalkable(T.get(map, x, y))) tiles.push([x, y]);
+    for (const t of tiles) assert.ok(HW.pathfind.find(map, tiles[0], t) !== null, 'floor ' + fi + ' tile ' + t + ' is cut off');
+  });
+}));
+
+test('komenda: an armed inmate who spots the player through the bars shoots through them, then walks out', ok3(() => {
+  const w = HW.world.load(komenda, 'lajkonik', 5);
+  const map = w.floors[0].map;
+  const { id, size } = roomsOf(map);
+  // a gun-carrying enemy in a small room (a cell) who can see the corridor two tiles below its bars
+  const bars = T.find(map, 'w');
+  let inmate = null, spot = null;
+  for (const e of w.floors[0].enemies) {
+    const r = id[T.toTile(e.y)][T.toTile(e.x)];
+    if (HW.weapons[e.weapon.id].kind !== 'gun' || size[r] > 20) continue;
+    spot = bars.filter(([x, y]) => id[y - 1] && id[y - 1][x] === r)
+      .map(([x, y]) => [T.center(x), T.center(y + 2)])
+      .find(([x, y]) => HW.ai.canSee(w, e, x, y));
+    if (spot) { inmate = e; break; }
+  }
+  assert.ok(inmate, 'an armed inmate watches the corridor through the bars of his cell');
+  const cell = id[T.toTile(inmate.y)][T.toTile(inmate.x)];
+  const p = w.player;
+  p.x = spot[0]; p.y = spot[1]; p.invulnT = 1e9;
+  for (const e of w.floors[0].enemies) if (e !== inmate) e.alive = false; // only the inmate acts
+  const barRow = T.toTile(spot[1]) - 2;
+  let shots = 0, through = false, left = false;
+  for (let i = 0; i < 60 * 5 && !left; i++) {
+    HW.sim.step(w, Object.assign(HW.sim.emptyInput(), { aim: { x: inmate.x, y: inmate.y } }), 1 / 60);
+    shots += w.events.filter((ev) => ev.type === 'shot').length;
+    through = through || w.projectiles.some((b) => T.toTile(b.y) > barRow);
+    w.events.length = 0;
+    left = id[T.toTile(inmate.y)][T.toTile(inmate.x)] !== cell;
+  }
+  assert.ok(shots > 0, 'the inmate opened fire');
+  assert.ok(through, 'his bullets passed the bars into the corridor');
+  assert.ok(left, 'the inmate walked out of the cell');
+}));

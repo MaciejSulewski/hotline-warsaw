@@ -6,9 +6,11 @@ const { loadHW } = require('./helpers/load');
 const HW = loadHW();
 const plain = (x) => JSON.parse(JSON.stringify(x));
 
-function fresh(extraLevels) {
+// extraLevels: ids replaced by a copy of blok; without: ids removed, to stand for levels not authored.
+function fresh(extraLevels, without) {
   const H = loadHW();
   if (extraLevels) for (const id of extraLevels) H.levels[id] = Object.assign({}, H.levels.blok, { id, title: 'POZIOM: ' + id });
+  if (without) for (const id of without) delete H.levels[id];
   return H;
 }
 
@@ -78,7 +80,7 @@ test('keyboard path: confirm drives every screen', () => {
   assert.equal(f.levelId, 'blok');
 });
 test('locked level select is ignored; only defined levels are listed', () => {
-  const H = fresh(['pewex']);
+  const H = fresh(['pewex'], ['komenda']);
   const f = H.flow.create(H.save.defaults());
   H.flow.handle(f, { type: 'click' });
   assert.deepEqual(plain(H.flow.levelList(f)).map((l) => [l.id, l.unlocked]), [['blok', true], ['pewex', false]]);
@@ -213,7 +215,7 @@ test('update counts time in state and returns no cues outside the phone call', (
 
 // ---- screens: hit testing ----------------------------------------------------
 test('hitTest maps canvas pixels to actions', () => {
-  const H = fresh(['pewex']);
+  const H = fresh(['pewex'], ['komenda']);
   const F = H.flow, S = H.screens;
   const f = F.create(H.save.defaults());
   assert.deepEqual(plain(S.hitTest(f, 10, 10)), { type: 'click' });

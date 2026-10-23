@@ -54,6 +54,8 @@ You pick a mask before each attempt. It stays on when you restart.
 | ![Map of the ground floor: street, milk bar, stairwell, flats](docs/screenshots/12-blok-parter-map.png) | ![Phone call from Pani Halinka](docs/screenshots/5-phone-done.png) |
 | **Level 2 "Pewex", ground floor** | **Pewex shop floor** |
 | ![Map of the ground floor: street, shop floor with shelving, stockroom, staff room](docs/screenshots/15-pewex-parter-map.png) | ![Aisles between the shelves, under the PEWEX sign](docs/screenshots/14-pewex-sklep.png) |
+| **Level 3 "Komenda", ground floor** | **Komenda cell block** |
+| ![Map of the ground floor: street under the MO signs, lobby, office, interrogation room, guard room, cells](docs/screenshots/18-komenda-parter-map.png) | ![Barred cells along the cell-block corridor](docs/screenshots/19-komenda-areszt.png) |
 
 ## Running the tests
 
