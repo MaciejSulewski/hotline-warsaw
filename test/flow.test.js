@@ -373,3 +373,40 @@ test('hud: arrow orbits the player on screen and points at the target', () => {
 test('scoring exports the combo window used by the hud', () => {
   assert.equal(HW.scoring.WINDOW, 2.5);
 });
+
+test('mask choice is remembered across levels (only while unlocked)', () => {
+  const F = HW.flow;
+  const H = fresh(['pewex']);
+  const save = H.save.defaults();
+  save.unlockedLevels.push('pewex'); save.unlockedMasks.push('bolek');
+  const f = H.flow.create(save);
+  const toMask = () => {
+    F.handle(f, { type: 'select', id: f.levelId || 'blok' });
+    H.flow.update(f, 0.01); F.handle(f, { type: 'confirm' }); H.flow.update(f, 0.01); F.handle(f, { type: 'confirm' });
+    assert.equal(f.state, 'maskSelect');
+  };
+  H.flow.handle(f, { type: 'click' });
+  toMask();
+  F.handle(f, { type: 'select', id: 'bolek' });
+  F.handle(f, { type: 'back' });
+  assert.equal(f.state, 'levelSelect');
+  toMask();
+  assert.equal(H.flow.maskList(f)[f.sel].id, 'bolek');
+  f.save.unlockedMasks = ['lajkonik']; // no longer unlocked: falls back to the first unlocked
+  F.handle(f, { type: 'back' });
+  toMask();
+  assert.equal(H.flow.maskList(f)[f.sel].id, 'lajkonik');
+});
+test('click then confirm in one frame advances the phone call only once', () => {
+  const H = fresh();
+  const f = H.flow.create(H.save.defaults());
+  H.flow.handle(f, { type: 'click' });
+  H.flow.handle(f, { type: 'select', id: 'blok' });
+  H.flow.update(f, 0.01);
+  H.flow.handleFrame(f, [{ type: 'click' }, { type: 'confirm' }]); // click skips; confirm is dropped
+  assert.equal(f.state, 'phoneCall');
+  assert.equal(f.phone.done, true);
+  H.flow.update(f, 1 / 60);
+  H.flow.handleFrame(f, [{ type: 'confirm' }]);
+  assert.equal(f.state, 'maskSelect');
+});

@@ -531,3 +531,19 @@ test('main: Esc on the error screen returns to level select', () => {
   assert.equal(H.main.state.flow.state, 'levelSelect');
   assert.equal(H.main.state.world, null);
 });
+
+test('floor event starts a 0.2 s fade that decays and clears on restart', () => {
+  const fx = HW.fx.create();
+  const cam = Cam.create();
+  assert.equal(fx.fade, 0);
+  HW.fx.consume(fx, [{ type: 'floor', floor: 1, x: 0, y: 0 }], cam);
+  assert.equal(fx.fade, HW.fx.FADE);
+  assert.equal(HW.fx.FADE, 0.2);
+  HW.fx.update(fx, 0.1);
+  assert.ok(Math.abs(fx.fade - 0.1) < 1e-9);
+  HW.fx.update(fx, 0.2);
+  assert.equal(fx.fade, 0);
+  HW.fx.consume(fx, [{ type: 'floor' }], cam);
+  HW.fx.clearDecals(fx);
+  assert.equal(fx.fade, 0);
+});

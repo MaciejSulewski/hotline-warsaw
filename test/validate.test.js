@@ -83,3 +83,7 @@ test('several bad ground entries each get an error', () => {
   assert.equal(errs.length, 2, JSON.stringify(errs));
   assert.ok(errs[0].includes('floor 0 ground 0') && errs[1].includes('floor 0 ground 1'), JSON.stringify(errs));
 });
+
+test('door next to a window counts the window as wall (matches door.create)', () => {
+  assert.deepEqual(V(makeLevel(['#####', '#.w.#', '#PD.#', '#.w.#', '#####'])), []);
+});

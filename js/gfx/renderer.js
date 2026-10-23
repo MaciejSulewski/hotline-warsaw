@@ -270,6 +270,13 @@
     ctx.restore();
 
     drawTint(ctx, t);
+    if (fx.fade > 0) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, fx.fade / HW.fx.FADE);
+      ctx.fillStyle = HW.palette.black;
+      ctx.fillRect(0, 0, HW.camera.W, HW.camera.H);
+      ctx.restore();
+    }
     drawCrosshair(ctx, cam.cursor);
   }
 

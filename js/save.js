@@ -58,7 +58,7 @@
       bestScores: Object.assign({}, data.bestScores),
     };
     const prev = out.bestScores[levelId];
-    if (!prev || total > prev.score) out.bestScores[levelId] = { score: total, grade: grade };
+    if (!prev || typeof prev.score !== 'number' || total > prev.score) out.bestScores[levelId] = { score: total, grade: grade };
 
     const next = HW.masks.nextLevel(levelId);
     let newLevel = null;

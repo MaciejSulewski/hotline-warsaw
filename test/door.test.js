@@ -81,3 +81,13 @@ test('push is not cumulative and ignores non-touching circles', () => {
   HW.door.push(d2, 20, 40, 5, 120, 0);
   assert.equal(d2.av, 0);
 });
+
+test('pushing a door swings it away from the pusher, from either side', () => {
+  const w = load('lajkonik');
+  const d = door(w); // vertical, hinge (72,32), free end at (72,48)
+  HW.door.push(d, 68, 40, 5, 30, 0);
+  assert.ok(d.av < 0, 'pushed from the left: free end swings toward +x, av ' + d.av);
+  d.av = 0;
+  HW.door.push(d, 76, 40, 5, -30, 0);
+  assert.ok(d.av > 0, 'pushed from the right: free end swings toward -x, av ' + d.av);
+});

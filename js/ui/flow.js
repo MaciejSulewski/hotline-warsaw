@@ -12,7 +12,7 @@
   function create(save) {
     return {
       state: 'title', save, levelId: null, maskId: null, world: null, results: null,
-      phone: null, sel: 0, stateT: 0,
+      phone: null, lastMaskId: null, sel: 0, stateT: 0, skipped: false,
     };
   }
 
@@ -39,7 +39,7 @@
     flow.stateT = 0;
     const list = listFor(flow);
     if (list) {
-      const prev = state === 'levelSelect' ? flow.levelId : flow.maskId;
+      const prev = state === 'levelSelect' ? flow.levelId : flow.lastMaskId;
       const i = list.findIndex((e) => e.id === prev && e.unlocked);
       flow.sel = i >= 0 ? i : Math.max(0, list.findIndex((e) => e.unlocked));
     }
@@ -62,7 +62,7 @@
       flow.phone = HW.phonecall.create(e.level.phoneCall || []);
       go(flow, 'phoneCall');
     } else {
-      flow.maskId = id;
+      flow.maskId = flow.lastMaskId = id;
       go(flow, 'playing');
     }
   }
@@ -81,6 +81,7 @@
     if (ringing(flow) || !flow.phone.done) {
       flow.stateT = Math.max(flow.stateT, RING);
       HW.phonecall.skip(flow.phone);
+      flow.skipped = true;
     } else {
       go(flow, 'maskSelect');
     }
@@ -118,10 +119,21 @@
     return flow;
   }
 
+  // Applies one frame's actions through `apply` (default: handle). At most one screen change
+  // per frame: stops after an action that changes the state or skips the phone-call text.
+  function handleFrame(flow, actions, apply) {
+    for (const a of actions) {
+      const before = flow.state;
+      (apply || handle)(flow, a);
+      if (flow.state !== before || flow.skipped) break;
+    }
+  }
+
   // Advances timers; returns sound cues ('ring') for main to play.
   function update(flow, dt) {
     const cues = [];
     const t0 = flow.stateT;
+    flow.skipped = false;
     flow.stateT += dt;
     if (flow.state === 'phoneCall') {
       for (let k = 0; k * RING_EVERY < RING; k++) {
@@ -133,5 +145,5 @@
     return cues;
   }
 
-  HW.flow = { MASK_IDS, RING, create, handle, update, levelList, maskList, ringing };
+  HW.flow = { MASK_IDS, RING, create, handle, handleFrame, update, levelList, maskList, ringing };
 })(globalThis.HW);

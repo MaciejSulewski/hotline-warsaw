@@ -51,7 +51,7 @@
       { label: 'ZABÓJSTWA', points: state.kills },
       { label: 'COMBO', points: state.combo },
       { label: 'ELASTYCZNOŚĆ', points: 200 * state.kinds.length },
-      { label: 'CZAS', points: Math.max(0, 3000 - 20 * seconds) },
+      { label: 'CZAS', points: Math.max(0, Math.round(3000 - 20 * seconds)) },
       { label: 'ODWAGA', points: state.bold },
     ];
     const total = lines.reduce((a, l) => a + l.points, 0);

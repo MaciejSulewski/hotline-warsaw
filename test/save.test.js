@@ -84,3 +84,11 @@ test('recordResult on last level has no next level', () => {
   const r = HW.save.recordResult(HW.save.defaults(), 'komenda', 10, 'F');
   assert.equal(r.newLevel, null);
 });
+
+test('recordResult replaces a malformed best-score entry', () => {
+  const start = Object.assign(HW.save.defaults(), { bestScores: { blok: { grade: 'A' } } });
+  const r = HW.save.recordResult(start, 'blok', 100, 'D');
+  assert.deepEqual(j(r.data.bestScores.blok), { score: 100, grade: 'D' });
+  const s2 = Object.assign(HW.save.defaults(), { bestScores: { blok: 5 } });
+  assert.deepEqual(j(HW.save.recordResult(s2, 'blok', 100, 'D').data.bestScores.blok), { score: 100, grade: 'D' });
+});

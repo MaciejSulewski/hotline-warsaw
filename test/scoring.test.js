@@ -162,3 +162,9 @@ test('stairs move between floors and do not bounce back', () => {
   assert.equal(w.floorIndex, 0);
   assert.deepEqual([w.player.x, w.player.y], [6 * 16 + 8, 2 * 16 + 8]);
 });
+
+test('finish rounds the time line so lines and total are integers', () => {
+  const r = S.finish(S.create(), 50.7333, 1000);
+  assert.equal(line(r, 'CZAS'), 1985);
+  assert.ok(Number.isInteger(r.total));
+});

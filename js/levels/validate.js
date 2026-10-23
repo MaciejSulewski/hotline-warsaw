@@ -50,7 +50,7 @@
             if (fi !== 0) err('floor ' + fi + ' has P at (' + x + ',' + y + '); P must be on floor 0');
           }
           if (ch === 'D') {
-            const wall = (dx, dy) => T.get(map, x + dx, y + dy) === '#';
+            const wall = (dx, dy) => T.isSolid(T.get(map, x + dx, y + dy));
             if ((wall(-1, 0) && wall(1, 0)) === (wall(0, -1) && wall(0, 1))) {
               err('floor ' + fi + ' door at (' + x + ',' + y + ') needs walls on exactly one opposing pair of neighbours');
             }

@@ -28,7 +28,7 @@ test('init returns false when the constructor throws', () => {
 
 // ---- Fake AudioContext ---------------------------------------------------------
 function makeFake() {
-  const log = { osc: 0, gain: 0, filter: 0, source: 0, buffer: 0 };
+  const log = { osc: 0, gain: 0, filter: 0, source: 0, buffer: 0, disc: [] };
   const param = (v) => ({
     value: v,
     setValueAtTime(x) { this.value = x; return this; },
@@ -36,7 +36,7 @@ function makeFake() {
     exponentialRampToValueAtTime(x) { return this; },
     setTargetAtTime(x) { this.value = x; return this; },
   });
-  const node = () => ({ connect(n) { return n; }, disconnect() {}, start() {}, stop() {} });
+  const node = () => ({ connect(n) { return n; }, disconnect() { log.disc.push(this); }, start() {}, stop() {} });
   class FakeCtx {
     constructor() { this.currentTime = 0; this.sampleRate = 8000; this.destination = node(); this.state = 'running'; log.ctx = this; }
     resume() { return Promise.resolve(); }
@@ -117,8 +117,13 @@ test('fake AudioContext: music schedules notes on a timer; stop and muffle are s
   assert.equal(timers.filter(Boolean).length, 1);
   assert.doesNotThrow(() => HW.music.muffle(true));
   assert.doesNotThrow(() => HW.music.muffle(false));
+  const discBefore = log.disc.length;
   HW.music.stop();
   assert.equal(timers.filter(Boolean).length, 0);
+  assert.equal(log.disc.length - discBefore, 2, 'stop disconnects the music bus and its filter');
+  HW.music.start({ root: 'A', progression: [0] }); // restart builds a fresh bus
+  assert.equal(timers.filter(Boolean).length, 1);
+  HW.music.stop();
 });
 
 // ---- main.js wiring --------------------------------------------------------------

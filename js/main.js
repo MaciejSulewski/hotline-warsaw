@@ -128,11 +128,7 @@
       if (k.down) actions.push({ type: 'move', dir: 1 });
       if (k.confirm) actions.push({ type: 'confirm' });
       if (k.back) actions.push({ type: 'back' });
-      for (const a of actions) {
-        const before = flow.state;
-        dispatch(a);
-        if (flow.state !== before) break;
-      }
+      HW.flow.handleFrame(flow, actions, (f, a) => dispatch(a));
     }
 
     function updatePlaying(k, dt) {

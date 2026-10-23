@@ -3,11 +3,12 @@
 
   const HIT_STOP = 0.04;
   const FLASH_LIFE = 0.05;
+  const FADE = 0.2; // floor-change fade-in (spec §7)
 
   // Presentation-only effects; randomness here is cosmetic (Math.random), never simulation.
   // splats: queued blood, painted onto fx.decals[floorIndex] (persistent canvases) by the renderer.
   function create() {
-    return { hit: 0, flashes: [], particles: [], splats: [], decals: {} };
+    return { hit: 0, fade: 0, flashes: [], particles: [], splats: [], decals: {} };
   }
 
   function splat(x, y, big) {
@@ -48,7 +49,7 @@
           break;
         case 'death': C.shake(cam, 6); break;
         case 'door': case 'knockdown': case 'shieldbreak': C.shake(cam, 1.5); break;
-        case 'floor': cam.snapped = false; break; // camera cut on stairs
+        case 'floor': cam.snapped = false; fx.fade = FADE; break; // camera cut + short fade on stairs
         default: break;
       }
     }
@@ -57,6 +58,8 @@
   function update(fx, dt) {
     fx.hit = Math.max(0, fx.hit - dt);
     if (fx.hit < 1e-9) fx.hit = 0;
+    fx.fade = Math.max(0, fx.fade - dt);
+    if (fx.fade < 1e-9) fx.fade = 0;
     for (const f of fx.flashes) f.life -= dt;
     fx.flashes = fx.flashes.filter((f) => f.life > 0);
     for (const p of fx.particles) {
@@ -75,7 +78,8 @@
     fx.particles = [];
     fx.flashes = [];
     fx.hit = 0;
+    fx.fade = 0;
   }
 
-  HW.fx = { create, consume, update, hitStop, clearDecals };
+  HW.fx = { FADE, create, consume, update, hitStop, clearDecals };
 })(globalThis.HW);

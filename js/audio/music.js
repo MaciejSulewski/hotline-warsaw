@@ -50,6 +50,9 @@
   function stop() {
     if (timer !== null) clearInterval(timer);
     timer = null; level = null;
+    // Cut the old bus (and the pads still ringing on it) off from the master.
+    for (const n of [bus, filter]) { try { if (n) n.disconnect(); } catch (e) { /* already gone */ } }
+    bus = null; filter = null;
   }
 
   function muffle(on) {
