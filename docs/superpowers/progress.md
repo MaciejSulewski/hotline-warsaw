@@ -108,3 +108,7 @@ Task 15: complete (commits 5850739..a7b8f89, review clean)
 - Ruling R28: Ż dot touching the notched bar (##.##) diagonally is accepted as free-standing enough — a fully free dot needs #...# in row 1, which no longer reads as Z; Ń left unchanged (not in R26 list) — cost if wrong: one glyph redraw.
 Task 16: minor (deferred): 'shop floor has free-standing shelving' test counts wall islands over all of floor 0, not just shop rows; Ó/Ć lose top-right corner pixel (slightly lopsided); Ż contact test checks only the pixel below the dot; Ń acute still touches right stem diagonally; shelves use concrete wall sprite; README gained a Pewex screenshot row (unlisted file)
 Task 16: complete (commits b1d0a21..908f704, review clean)
+- Ruling R29: Komenda keeps every floor one connected region, so R16's unreachable-shooter case never fires — spec/brief don't require it and it is fairer; bars only block movement — cost if wrong: level redesign of cells.
+- Ruling R30: Task 17 ⚠️ items resolved by controller — full suite re-run: 246 pass, 0 fail, 0 skipped; console-error check accepted from report; brief Step 4 manual checklist deferred to the user at finish — cost if wrong: none.
+Task 17: minor (deferred): floor-1 corridor AK patrol turn is only 4.6 px outside SIGHT_RANGE of the stair-hall exit, unpinned by a test (flag for playtest); cell bars use glass 'w' sprite; AK test doesn't pin the armoury room; neon 'flicker' field not validated; report credits MO signs instead of wall for lobby sightline
+Task 17: complete (commits 6085e0f..6bd18b7, review clean)
