@@ -58,3 +58,28 @@ test('stair on non-S tile and bad target tile', () => {
   assert.equal(V(makeLevel(null, { floors: [f0, f1] })).length, 2);
 });
 test('targetScore 0', () => { const l = makeLevel(ROWS); l.targetScore = 0; one(l, 'targetScore'); });
+
+// optional per-floor ground: [{ tile: 'asphalt' | 'pavement', rect: [x0, y0, x1, y1] }] (inclusive, in bounds)
+const withGround = (ground) => { const l = makeLevel(ROWS); l.floors[0].ground = ground; return l; };
+test('valid ground rects have no errors', () => {
+  assert.deepEqual(V(withGround([{ tile: 'asphalt', rect: [1, 1, 2, 2] }, { tile: 'pavement', rect: [0, 0, 6, 4] }])), []);
+  assert.deepEqual(V(withGround([])), []);
+});
+test('ground that is not an array', () => one(withGround({ tile: 'asphalt', rect: [1, 1, 2, 2] }), 'ground'));
+test('ground entry that is not an object', () => one(withGround([null]), 'ground 0'));
+test('ground with unknown tile', () => one(withGround([{ tile: 'lava', rect: [1, 1, 2, 2] }]), 'unknown tile "lava"'));
+test('ground rect not 4 integers', () => {
+  one(withGround([{ tile: 'asphalt', rect: [1, 1, 2] }]), 'rect');
+  one(withGround([{ tile: 'asphalt', rect: [1, 1.5, 2, 2] }]), 'rect');
+  one(withGround([{ tile: 'asphalt' }]), 'rect');
+});
+test('ground rect out of bounds or inverted', () => {
+  one(withGround([{ tile: 'asphalt', rect: [1, 1, 7, 2] }]), 'out of bounds');
+  one(withGround([{ tile: 'asphalt', rect: [-1, 0, 2, 2] }]), 'out of bounds');
+  one(withGround([{ tile: 'asphalt', rect: [3, 1, 2, 2] }]), 'out of bounds');
+});
+test('several bad ground entries each get an error', () => {
+  const errs = V(withGround([{ tile: 'lava', rect: [1, 1, 2, 2] }, { tile: 'asphalt', rect: [0, 0, 9, 9] }]));
+  assert.equal(errs.length, 2, JSON.stringify(errs));
+  assert.ok(errs[0].includes('floor 0 ground 0') && errs[1].includes('floor 0 ground 1'), JSON.stringify(errs));
+});

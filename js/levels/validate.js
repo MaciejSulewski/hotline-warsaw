@@ -2,7 +2,26 @@
   'use strict';
 
   const KNOWN = '#.~wDPS';
+  const GROUND_TILES = ['asphalt', 'pavement'];
   HW.levels = HW.levels || {};
+
+  // Optional per-floor outdoor surfaces: [{ tile: 'asphalt' | 'pavement', rect: [x0, y0, x1, y1] }],
+  // corners inclusive and inside the map.
+  function validateGround(ground, map, err) {
+    if (ground === undefined) return;
+    if (!Array.isArray(ground)) { err('ground must be a list of (tile, rect) entries'); return; }
+    ground.forEach((g, gi) => {
+      const where = 'ground ' + gi;
+      if (!g || typeof g !== 'object') { err(where + ' must be an object with tile and rect'); return; }
+      if (!GROUND_TILES.includes(g.tile)) err(where + ' has unknown tile "' + g.tile + '" (expected ' + GROUND_TILES.join(' or ') + ')');
+      const r = g.rect;
+      if (!Array.isArray(r) || r.length !== 4 || !r.every(Number.isInteger)) {
+        err(where + ' rect must be 4 integers (x0, y0, x1, y1)');
+      } else if (r[0] < 0 || r[1] < 0 || r[0] > r[2] || r[1] > r[3] || r[2] >= map.w || r[3] >= map.h) {
+        err(where + ' rect (' + r + ') is out of bounds or inverted, map is ' + map.w + '×' + map.h);
+      }
+    });
+  }
 
   function validate(level) {
     const errors = [];
@@ -47,6 +66,7 @@
     };
 
     floors.forEach((f, fi) => {
+      validateGround(f.ground, maps[fi], (msg) => err('floor ' + fi + ' ' + msg));
       (f.enemies || []).forEach((e, ei) => {
         const where = 'floor ' + fi + ' enemy ' + ei + ' at (' + e.at + ')';
         if (!HW.enemyTypes[e.type]) err(where + ' has unknown type "' + e.type + '"');

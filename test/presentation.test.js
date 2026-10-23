@@ -150,6 +150,19 @@ test('accented capitals are full height, not squeezed like lowercase', () => {
   const L = HW.font.GLYPHS['Ł'];
   assert.ok(L.every(lit), 'Ł spans all 7 rows');
 });
+test('acute marks and the Ż dot stand free of the letter body', () => {
+  // an acute in row 0 must not touch any lit pixel of row 1, not even diagonally
+  for (const ch of 'ĆÓŚŹ') {
+    const g = HW.font.GLYPHS[ch];
+    for (let c = 0; c < 5; c++) {
+      if (g[0][c] !== '#') continue;
+      for (const dc of [-1, 0, 1]) assert.notEqual(g[1][c + dc], '#', ch + ' accent at col ' + c + ' touches the body');
+    }
+  }
+  // the Ż dot does not sit directly on the top bar
+  const Z = HW.font.GLYPHS['Ż'];
+  for (let c = 0; c < 5; c++) if (Z[0][c] === '#') assert.notEqual(Z[1][c], '#', 'Ż dot sits on the bar');
+});
 test('font measure', () => {
   assert.equal(HW.font.measure('', 1), 0);
   assert.equal(HW.font.measure('A', 1), 5);
