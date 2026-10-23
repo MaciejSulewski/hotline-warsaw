@@ -52,6 +52,8 @@ You pick a mask before each attempt. It stays on when you restart.
 | Level 1 "Blok", ground floor | Phone call |
 |---|---|
 | ![Map of the ground floor: street, milk bar, stairwell, flats](docs/screenshots/12-blok-parter-map.png) | ![Phone call from Pani Halinka](docs/screenshots/5-phone-done.png) |
+| **Level 2 "Pewex", ground floor** | **Pewex shop floor** |
+| ![Map of the ground floor: street, shop floor with shelving, stockroom, staff room](docs/screenshots/15-pewex-parter-map.png) | ![Aisles between the shelves, under the PEWEX sign](docs/screenshots/14-pewex-sklep.png) |
 
 ## Running the tests
 

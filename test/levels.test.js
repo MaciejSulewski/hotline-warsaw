@@ -153,17 +153,18 @@ test('blok: a pistol and an extra melee weapon lie on the floor', () => {
   assert.ok(items.some((i) => HW.weapons[i.weapon].kind === 'melee'));
 });
 
-test('blok: cyan BAR MLECZNY neon on the facade above the street', () => {
-  const n = blok.floors[0].neon.find((s) => s.text === 'BAR MLECZNY' && s.color === 'cyan');
-  assert.ok(n);
-  const map = T.parse(blok.floors[0].map);
+// ---- shared level checks, applied per level below ----------------------------------
+function neonOnFacade(lvl, text, color) {
+  const n = lvl.floors[0].neon.find((s) => s.text === text && s.color === color);
+  assert.ok(n, color + ' ' + text + ' neon');
+  const map = T.parse(lvl.floors[0].map);
   const tiles = Math.ceil((HW.font.measure(n.text, 1) + 6) / 16);
   for (let x = n.at[0]; x < n.at[0] + tiles; x++) assert.equal(T.get(map, x, n.at[1]), '#', 'sign hangs on a solid wall at x=' + x);
-});
+}
 
-test('blok: the street around the car is drawn as pavement and asphalt', () => {
-  const ground = blok.floors[0].ground;
-  const map = T.parse(blok.floors[0].map);
+function streetAroundCar(lvl) {
+  const ground = lvl.floors[0].ground;
+  const map = T.parse(lvl.floors[0].map);
   const [px, py] = T.find(map, 'P')[0];
   const inside = (g, x, y) => x >= g.rect[0] && y >= g.rect[1] && x <= g.rect[2] && y <= g.rect[3];
   assert.ok(ground.some((g) => g.tile === 'asphalt' && inside(g, px, py)), 'car stands on asphalt');
@@ -173,11 +174,11 @@ test('blok: the street around the car is drawn as pavement and asphalt', () => {
       assert.ok('.P'.includes(T.get(map, x, y)), g.tile + ' over a non-floor tile at ' + [x, y]);
     }
   }
-});
+}
 
-test('blok: at least 3 doors have a guard right behind them (kick-open knockdowns)', () => {
+function guardedDoors(lvl) {
   let n = 0;
-  blok.floors.forEach((f) => {
+  lvl.floors.forEach((f) => {
     const map = T.parse(f.map);
     for (const [dx, dy] of T.find(map, 'D')) {
       const d = HW.door.create(dx, dy, map);
@@ -186,11 +187,11 @@ test('blok: at least 3 doors have a guard right behind them (kick-open knockdown
       if (guarded) n++;
     }
   });
-  assert.ok(n >= 3, 'only ' + n + ' guarded doors');
-});
+  return n;
+}
 
-test('blok: no enemy can see the car at spawn, nor from its patrol route', () => {
-  const w = HW.world.load(blok, 'lajkonik', 1);
+function nobodySeesTheCar(lvl) {
+  const w = HW.world.load(lvl, 'lajkonik', 1);
   const p = w.player;
   const segs = w.floors[0].doors.map(HW.door.segment);
   const sees = (x, y, facing) => {
@@ -212,4 +213,81 @@ test('blok: no enemy can see the car at spawn, nor from its patrol route', () =>
       }
     }
   }
+}
+
+test('blok: cyan BAR MLECZNY neon on the facade above the street', () => neonOnFacade(blok, 'BAR MLECZNY', 'cyan'));
+test('blok: the street around the car is drawn as pavement and asphalt', () => streetAroundCar(blok));
+test('blok: at least 3 doors have a guard right behind them (kick-open knockdowns)', () => {
+  const n = guardedDoors(blok);
+  assert.ok(n >= 3, 'only ' + n + ' guarded doors');
 });
+test('blok: no enemy can see the car at spawn, nor from its patrol route', () => nobodySeesTheCar(blok));
+
+// ---- level 2 specifics (spec §7, Task 16 brief) ----------------------------------
+const pewex = HW.levels.pewex;
+const ok = (fn) => () => { assert.ok(pewex, 'HW.levels.pewex is defined'); fn(); };
+
+test('pewex: header, music and phone call', ok(() => {
+  assert.equal(pewex.id, 'pewex');
+  assert.equal(pewex.title, 'POZIOM 2: PEWEX');
+  assert.equal(pewex.subtitle, 'Śródmieście, 1987');
+  assert.equal(pewex.targetScore, 11000);
+  assert.deepEqual(JSON.parse(JSON.stringify(pewex.music)), { root: 'D', progression: [0, 3, 5, 4] });
+  assert.ok(pewex.phoneCall.length >= 3 && pewex.phoneCall.length <= 5, 'phone call has ' + pewex.phoneCall.length + ' lines');
+  for (const line of pewex.phoneCall) for (const ch of line.toUpperCase()) assert.ok(HW.font.GLYPHS[ch], 'glyph ' + ch);
+}));
+
+test('pewex: one or two floors, stairs both ways if two', ok(() => {
+  assert.ok(pewex.floors.length >= 1 && pewex.floors.length <= 2);
+  if (pewex.floors.length === 2) {
+    assert.ok(pewex.floors[0].stairs.some((s) => s.to.floor === 1));
+    assert.ok(pewex.floors[1].stairs.some((s) => s.to.floor === 0));
+  }
+}));
+
+test('pewex: mostly bandzior with pistols and shotguns, mixed guards and patrols', ok(() => {
+  const all = enemiesOf(pewex);
+  const bandzior = all.filter((e) => e.type === 'bandzior');
+  assert.ok(bandzior.length > all.length / 2, bandzior.length + ' of ' + all.length + ' are bandzior');
+  for (const e of bandzior) assert.ok(['pistol', 'shotgun'].includes(e.weapon), 'bandzior with ' + e.weapon);
+  assert.ok(bandzior.some((e) => e.weapon === 'pistol') && bandzior.some((e) => e.weapon === 'shotgun'));
+  assert.ok(all.some((e) => e.patrol) && all.some((e) => !e.patrol));
+}));
+
+test('pewex: a shotgun and a melee weapon lie on the floor', ok(() => {
+  const items = pewex.floors.reduce((a, f) => a.concat(f.items || []), []);
+  assert.ok(items.some((i) => i.weapon === 'shotgun'));
+  assert.ok(items.some((i) => HW.weapons[i.weapon].kind === 'melee'));
+}));
+
+test('pewex: magenta PEWEX neon on the shop facade', ok(() => neonOnFacade(pewex, 'PEWEX', 'magenta')));
+test('pewex: the street around the car is drawn as pavement and asphalt', ok(() => streetAroundCar(pewex)));
+
+test('pewex: the shop floor has free-standing shelving (wall islands) for cover', ok(() => {
+  // count 4-connected groups of '#' that do not touch the map border
+  const map = T.parse(pewex.floors[0].map);
+  const seen = new Set();
+  let islands = 0;
+  for (let y = 0; y < map.h; y++) for (let x = 0; x < map.w; x++) {
+    if (T.get(map, x, y) !== '#' || seen.has(x + ',' + y)) continue;
+    let border = false;
+    const stack = [[x, y]];
+    seen.add(x + ',' + y);
+    while (stack.length) {
+      const [cx, cy] = stack.pop();
+      if (cx === 0 || cy === 0 || cx === map.w - 1 || cy === map.h - 1) border = true;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = cx + dx, ny = cy + dy, k = nx + ',' + ny;
+        if (nx >= 0 && ny >= 0 && nx < map.w && ny < map.h && T.get(map, nx, ny) === '#' && !seen.has(k)) { seen.add(k); stack.push([nx, ny]); }
+      }
+    }
+    if (!border) islands++;
+  }
+  assert.ok(islands >= 6, 'only ' + islands + ' free-standing shelves');
+}));
+
+test('pewex: at least 3 doors have a guard right behind them (kick-open knockdowns)', ok(() => {
+  const n = guardedDoors(pewex);
+  assert.ok(n >= 3, 'only ' + n + ' guarded doors');
+}));
+test('pewex: no enemy can see the car at spawn, nor from its patrol route', ok(() => nobodySeesTheCar(pewex)));
